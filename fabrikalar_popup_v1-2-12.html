@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>FABRİKALAR</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#888;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Oswald',sans-serif;gap:14px;}
+
+/* DEMO SELECTOR */
+.selector-wrap{width:340px;}
+.selector-label{font-family:'Oswald',sans-serif;font-weight:600;font-size:9px;color:#ddd;letter-spacing:2px;margin-bottom:6px;display:block;text-align:center;}
+.fab-pills{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;}
+.fab-pill{padding:5px 10px;background:rgba(0,0,0,0.35);color:#ddd;border:1px solid rgba(255,255,255,0.15);font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;letter-spacing:.5px;cursor:pointer;border-radius:2px;display:flex;align-items:center;gap:4px;transition:all .15s;}
+.fab-pill:hover{background:rgba(0,0,0,0.55);}
+.fab-pill.active{background:#111;color:#C9A84C;border-color:#C9A84C;}
+.fab-pill .pill-ico{font-size:12px;}
+
+/* MODE BUTTONS */
+.demo-btns{display:flex;gap:6px;}
+.open-btn{padding:8px 14px;background:#111;color:#fff;border:none;font-family:'Oswald',sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;cursor:pointer;}
+.open-btn.b{background:#444;}
+.open-btn.c{background:#777;}
+
+/* OVERLAY & POPUP */
+#ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:10000;}
+#pop{display:none;position:fixed;bottom:116px;left:50%;transform:translateX(-50%);width:320px;height:520px;background:#fff;border:3px double #111;border-bottom:none;flex-direction:column;overflow:hidden;z-index:10001;}
+#pop.open{display:flex;animation:su .25s cubic-bezier(.4,0,.2,1);}
+@keyframes su{from{transform:translateX(-50%) translateY(640px);}to{transform:translateX(-50%) translateY(0);}}
+
+/* HEADER */
+#hd{height:64px;flex-shrink:0;background:#fff;border-bottom:3px double #111;display:flex;align-items:center;padding:0 10px;position:relative;}
+#hd .bina-ico{width:35px;height:35px;object-fit:contain;flex-shrink:0;}
+#hd .center{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+#hd .lf{height:54px;max-width:220px;object-fit:contain;}
+#hd .right-btns{margin-left:auto;display:flex;align-items:center;gap:2px;}
+#hd .ico-btn{background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;}
+#hd .ico-btn img{width:22px;height:22px;object-fit:contain;}
+
+/* STOK HERO */
+#stok-hero{padding:10px 12px;border-bottom:3px double #111;flex-shrink:0;background:#fff;display:flex;justify-content:space-between;align-items:center;}
+.hero-left{}
+.hero-lbl{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#C9A84C;letter-spacing:1px;display:block;margin-bottom:2px;}
+.hero-val{font-family:'Oswald',sans-serif;font-weight:700;font-size:32px;color:#111;letter-spacing:1px;line-height:1;}
+.hero-sub{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#C9A84C;margin-top:2px;display:block;}
+.hero-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.hero-stat{text-align:right;}
+.hero-stat-lbl{font-family:'Oswald',sans-serif;font-size:10px;color:#C9A84C;font-weight:600;display:block;}
+.hero-stat-val{font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;color:#111;}
+.hero-bar-wrap{width:80px;height:3px;background:#f0f0f0;margin-top:4px;}
+.hero-bar{height:100%;background:#111;transition:width .4s;}
+
+/* TABS */
+#tab-bar{display:flex;border-bottom:1px solid #f0f0f0;flex-shrink:0;}
+.tab{flex:1;padding:9px 4px;text-align:center;font-family:'Oswald',sans-serif;font-weight:700;font-size:11px;letter-spacing:1.5px;color:#aaa;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.tab.active{color:#111;border-bottom:2px solid #111;}
+
+/* SCREENS */
+#screens{flex:1;position:relative;overflow:hidden;min-height:0;}
+.sc{display:none;position:absolute;inset:0;background:#fff;flex-direction:column;overflow-y:auto;}
+.sc.on{display:flex;}
+.sc::-webkit-scrollbar{width:2px;}
+.sc::-webkit-scrollbar-thumb{background:#eee;}
+
+/* COMMON ROWS */
+.sc-lbl{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#C9A84C;letter-spacing:1px;padding:7px 12px 3px;display:block;border-bottom:1px solid #f0f0f0;}
+.row{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid #f0f0f0;}
+.row-lbl{font-family:'Oswald',sans-serif;font-weight:600;font-size:11px;color:#111;}
+.row-val{font-family:'Oswald',sans-serif;font-weight:700;font-size:13px;color:#111;}
+.row-val.green{color:#2e7d32;}
+.row-val.gold{color:#B8860B;}
+.row-val.grey{color:#aaa;}
+.row-val.red{color:#8B3030;}
+
+/* SATIN AL — qty */
+.qty-wrap{padding:10px 12px;border-bottom:1px solid #f0f0f0;}
+.qty-row{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:8px;}
+.qty-btn{width:34px;height:34px;background:#111;color:#fff;border:none;font-family:'Oswald',sans-serif;font-weight:700;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.qty-val{font-family:'Oswald',sans-serif;font-weight:700;font-size:24px;color:#111;min-width:60px;text-align:center;}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;}
+.ch{padding:3px 8px;border:1px solid #ddd;background:#fff;font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#111;cursor:pointer;}
+.ch.sel,.ch:hover{background:#111;color:#fff;border-color:#111;}
+.total-row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f0f0f0;padding-top:6px;}
+.total-lbl{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#C9A84C;}
+.total-val{font-family:'Oswald',sans-serif;font-weight:700;font-size:16px;color:#111;}
+
+/* SPECIAL ROZET */
+.special-bar{background:#111;padding:6px 12px;display:flex;align-items:center;gap:6px;}
+.special-bar-txt{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#C9A84C;letter-spacing:.5px;}
+
+/* KASA */
+.kasa-hero{padding:16px 12px;border-bottom:1px solid #f0f0f0;}
+.kasa-hero-lbl{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#C9A84C;letter-spacing:1px;display:block;margin-bottom:4px;}
+.kasa-hero-val{font-family:'Oswald',sans-serif;font-weight:700;font-size:36px;color:#2e7d32;letter-spacing:1px;}
+.kasa-hero-sub{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#C9A84C;margin-top:3px;display:block;}
+
+/* FİYAT BUTONLARI */
+.fiyat-row{display:flex;border-bottom:1px solid #f0f0f0;}
+.fiyat-btn{flex:1;padding:10px 4px;border:none;border-right:1px solid #f0f0f0;background:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:12px;color:#111;cursor:pointer;text-align:center;}
+.fiyat-btn:last-child{border-right:none;}
+.fiyat-btn:active{background:#f8f8f8;}
+.fiyat-sub{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#C9A84C;display:block;margin-top:2px;}
+
+/* SAVUNMA */
+.sav-hero{padding:12px;border-bottom:1px solid #f0f0f0;}
+.sav-lbl{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#C9A84C;letter-spacing:1px;display:block;margin-bottom:6px;}
+.sav-bar-wrap{height:5px;background:#f0f0f0;margin-bottom:5px;}
+.sav-bar{height:100%;background:#111;transition:width .3s;}
+.sav-nums{display:flex;justify-content:space-between;}
+.sav-cur{font-family:'Oswald',sans-serif;font-weight:700;font-size:18px;color:#111;}
+.sav-max{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#C9A84C;align-self:flex-end;padding-bottom:2px;}
+.sav-auto{font-family:'Oswald',sans-serif;font-weight:600;font-size:10px;color:#2e7d32;margin-top:4px;display:block;}
+.mermi-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid #f0f0f0;}
+.mermi-lbl{font-family:'Oswald',sans-serif;font-weight:600;font-size:11px;color:#111;}
+.mermi-sub{font-family:'Oswald',sans-serif;font-size:10px;color:#C9A84C;font-weight:600;margin-top:1px;}
+.mermi-adet{font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;color:#111;min-width:50px;text-align:right;}
+
+/* BUTONLAR */
+.btn-wrap{padding:8px 12px 10px;margin-top:auto;}
+.btn{width:100%;padding:11px;border:none;background:#111;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:13.5px;letter-spacing:2px;cursor:pointer;margin-bottom:7px;}
+.btn:last-child{margin-bottom:0;}
+.btn.outline{background:#fff;color:#111;border:1px solid #ddd;}
+.btn.danger{background:#fff;color:#8B3030;border:1px solid #e0c0c0;}
+.btn.red{background:#fff;color:#8B3030;border:2px solid #e0c0c0;}
+
+/* INPUT */
+.inp-wrap{padding:10px 12px;border-bottom:1px solid #f0f0f0;}
+.inp-lbl{font-family:'Oswald',sans-serif;font-size:10px;font-weight:600;color:#C9A84C;letter-spacing:1px;display:block;margin-bottom:3px;}
+.inp{width:100%;border:none;border-bottom:2px solid #111;outline:none;font-family:'Oswald',sans-serif;font-weight:700;font-size:22px;color:#111;background:transparent;padding:2px 0;}
+
+/* TOAST */
+#toast{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:#111;color:#fff;font-family:'Oswald',sans-serif;font-weight:600;font-size:11px;letter-spacing:1px;padding:6px 14px;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none;z-index:200;}
+
+/* FOOTER */
+#ft{height:36px;flex-shrink:0;border-top:1px solid #f0f0f0;background:#fff;display:flex;align-items:center;justify-content:center;}
+#ft button{background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
+#ft img{height:40px;opacity:.5;}
+</style>
+</head>
+<body>
+
+<!-- FACTORY SELECTOR -->
+<div class="selector-wrap">
+  <span class="selector-label">FABRİKA SEÇ</span>
+  <div class="fab-pills" id="fab-pills"></div>
+</div>
+
+<!-- MODE BUTTONS -->
+<div class="demo-btns">
+  <button class="open-btn"   onclick="openPop('sahipsiz')">SAHİPSİZ</button>
+  <button class="open-btn b" onclick="openPop('baskasi')">BAŞKASININ</button>
+  <button class="open-btn c" onclick="openPop('benim')">BENİM</button>
+</div>
+<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;padding:4px 8px;">
+  <span style="font-family:'Oswald',sans-serif;font-weight:600;font-size:9px;color:#ddd;letter-spacing:1px;width:100%;text-align:center;margin-bottom:2px;">ŞEHİR (SPECIAL TEST)</span>
+  <select id="sehir-sel" onchange="sehirDegis(this.value)" style="background:#222;color:#fff;border:1px solid #555;font-family:'Oswald',sans-serif;font-size:10px;padding:4px 8px;letter-spacing:1px;width:200px;">
+    <option value="default">— NORMAL ŞEHİR —</option>
+    <option value="medellin">MEDELLİN</option>
+    <option value="chicago">CHİCAGO</option>
+    <option value="mexicocity">MEXİCO CİTY</option>
+    <option value="newyork">NEW YORK</option>
+    <option value="hamburg">HAMBURG</option>
+    <option value="vladivostok">VLADİVOSTOK</option>
+    <option value="sanghay">ŞANGHAY</option>
+  </select>
+</div>
+
+<div id="ov" onclick="closePop()"></div>
+<div id="pop">
+
+  <!-- HEADER -->
+  <div id="hd">
+    <img class="bina-ico" id="hd-ico" src="" onerror="this.style.display='none';this.parentNode.querySelector('.hd-ico-fb').style.display='flex'"><span class="hd-ico-fb" style="display:none;font-size:28px;width:48px;height:48px;align-items:center;justify-content:center;"></span>
+    <div class="center">
+      <div id="lf-wrap"><img class="lf"
+           src="https://mericaltinors1983-max.github.io/hustler/lafamilia-2.png"
+           onerror="document.getElementById('lf-wrap').innerHTML='<span style=\'font-family:Oswald,sans-serif;font-weight:700;font-size:22px;letter-spacing:2px;color:#111\'>LA FAMILIA</span>'">
+      </div>
+    </div>
+    <div class="right-btns">
+      <button class="ico-btn">
+        <div id="info-ico-wrap"><img src="https://mericaltinors1983-max.github.io/hustler/info2.png"
+             onerror="document.getElementById('info-ico-wrap').innerHTML='<span style=color:#888;font-size:16px>ℹ</span>'">
+        </div>
+      </button>
+      <button class="ico-btn" onclick="closePop()">
+        <div id="close-ico-wrap"><img src="https://mericaltinors1983-max.github.io/hustler/close1.png"
+             onerror="document.getElementById('close-ico-wrap').innerHTML='<span style=color:#555;font-size:20px>✕</span>'">
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- STOK HERO -->
+  <div id="stok-hero">
+    <div class="hero-left">
+      <span class="hero-lbl">MEVCUT STOK</span>
+      <div class="hero-val" id="hero-val">—</div>
+      <span class="hero-sub" id="hero-sub">—</span>
+    </div>
+    <div class="hero-right">
+      <div class="hero-stat">
+        <span class="hero-stat-lbl">ÜRETİM</span>
+        <span class="hero-stat-val" id="hero-uretim">—</span>
+      </div>
+      <div class="hero-bar-wrap">
+        <div class="hero-bar" id="hero-bar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div id="tab-bar"></div>
+
+  <div id="screens">
+    <div class="sc" id="sc0"></div>
+    <div class="sc" id="sc1"></div>
+    <div class="sc" id="sc2"></div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- FOOTER -->
+  <div id="ft">
+    <button onclick="closePop()">
+      <div id="ft-ico-wrap"><img src="https://mericaltinors1983-max.github.io/hustler/close_icon.png"
+           onerror="document.getElementById('ft-ico-wrap').innerHTML='<span style=\'font-family:Oswald,sans-serif;font-size:8px;font-weight:600;color:#bbb;letter-spacing:2px\'>KAPAT</span>'">
+      </div>
+    </button>
+  </div>
+
+</div>
+
+<script>
+var BASE = 'https://mericaltinors1983-max.github.io/hustler/';
+
+function urunImg(fab) {
+  if (!fab.urunPng) return fab.urunIco;
+  var fb = '<span class="urun-ico-fb">' + fab.urunIco + '</span>';
+  var img = '<img src="' + BASE + fab.urunPng + '" class="urun-ico-img" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;">';
+  return img + fb;
+}
+
+
+var CURRENT_SEHIR = 'default';
+
+var BINA_SPECIAL = {
+  'medellin_labaratuvar':  { bonus:'3x ÜRETİM',   desc:'900 White/saat — Normal 300/saat'    },
+  'chicago_mermi_fab':     { bonus:'1.3x ÜRETİM', desc:'2.600/saat — Normal 2.000/saat'      },
+  'mexicocity_mermi_fab':  { bonus:'1.2x ÜRETİM', desc:'2.400/saat — Normal 2.000/saat'      },
+  'newyork_mermi_fab':     { bonus:'1.1x ÜRETİM', desc:'2.200/saat — Normal 2.000/saat'      },
+  'hamburg_bira_fab':      { bonus:'1.5x ÜRETİM', desc:'1.500/saat — Normal 1.000/saat'      },
+  'vladivostok_altin_fab': { bonus:'2x ÜRETİM',   desc:'Altın üretimi 2 katı'                },
+  'sanghay_elmas_fab':     { bonus:'2x ÜRETİM',   desc:'Elmas üretimi 2 katı'                },
+};
+
+// fabrika id → BINA_SPECIAL key suffix
+var FAB_KEY_MAP = {
+  'BİRA FABRİKASI':  'bira_fab',
+  'SİGARA FABRİKASI':'sigara_fab',
+  'ECZANE':          'eczane',
+  'HASTANE':         'hastane',
+  'CHİP FABRİKASI':  'chip_fab',
+  'DRONE FABRİKASI': 'drone_fab',
+  'VİSKİ FABRİKASI': 'viski_fab',
+  'ALTIN FABRİKASI': 'altin_fab',
+  'ELMAS FABRİKASI': 'elmas_fab',
+  'LABORATUVAR':     'labaratuvar',
+  'MERMİ FABRİKASI': 'mermi_fab',
+};
+
+function applySpecial(fab) {
+  var key = CURRENT_SEHIR + '_' + (FAB_KEY_MAP[fab.isim] || '');
+  var sp = BINA_SPECIAL[key];
+  if (sp) {
+    fab.isSpecial = true;
+    fab.specialBonus = sp.bonus;
+    fab.specialDesc  = sp.desc;
+  } else {
+    fab.isSpecial = false;
+    fab.specialBonus = '';
+    fab.specialDesc  = '';
+  }
+  return fab;
+}
+
+function sehirDegis(val) {
+  CURRENT_SEHIR = val;
+  FAB = JSON.parse(JSON.stringify(FABRIKALAR[currentFabIdx]));
+  applySpecial(FAB);
+  if(document.getElementById('pop').classList.contains('open')) render();
+}
+
+// 11 FABRİKA VERİSİ
+var FABRIKALAR = [
+  {
+    isim:'BİRA FABRİKASI',    ico:'building-l.png',
+    urun:'BİRA',             urunPng:'urun_bira.png',              urunIco:'🍺',
+    uretim:1000,              fiyat:16,
+    stok:2000,                stokMax:6000,
+    binaFiyat:5000000,        minRank:'MİN. RANK 5',
+    sahipsizFiyat:8,
+    isSpecial:false, specialBonus:'', specialDesc:'',
+  },
+  {
+    isim:'SİGARA FABRİKASI',  ico:'building-f.png',
+    urun:'SİGARA',             urunPng:'urun_sigara.png',            urunIco:'🚬',
+    uretim:2000,              fiyat:6,
+    stok:5000,                stokMax:12000,
+    binaFiyat:5000000,        minRank:'MİN. RANK 4',
+    sahipsizFiyat:3,
+    isSpecial:false, specialBonus:'', specialDesc:'',
+  },
+  {
+    isim:'ECZANE',            ico:'building-j.png',
+    urun:'PİLL',             urunPng:'urun_pill.png',              urunIco:'💊',
+    uretim:500,               fiyat:30,
+    stok:1200,                stokMax:3000,
+    binaFiyat:6000000,        minRank:'MİN. RANK 4',
+    sahipsizFiyat:15,
+    isSpecial:false, specialBonus:'', specialDesc:'',
+  },
+  {
+    isim:'HASTANE',           ico:'building-i.png',
+    urun:'KAN',             urunPng:'urun_kan.png',               urunIco:'🩸',
+    uretim:500,               fiyat:170,
+    stok:800,                 stokMax:4800,
+    binaFiyat:6000000,        minRank:'MİN. RANK 4',
+    sahipsizFiyat:85,
+    isSpecial:false, specialBonus:'', specialDesc:'',
+  },
+  {
+    isim:'CHİP FABRİKASI',   ico:'building-c.png',
+    urun:'CHİP',             urunPng:'urun_chip.png',              urunIco:'⚙️',
+    uretim:400,               fiyat:240,
+    stok:400,                 stokMax:2400,
+    binaFiyat:7000000,        minRank:'MİN. RANK 6',
+    sahipsizFiyat:120,
+    isSpecial:false, specialBonus:'', specialDesc:'',
+  },
+  {
+    isim:'DRONE FABRİKASI',  ico:'building-g.png',
+    urun:'DRONE',             urunPng:'urun_drone.png',             urunIco:'🚁',
+    uretim:300,               fiyat:280,
+    stok:720,                 stokMax:2160,
+    binaFiyat:7000000,        minRank:'MİN. RANK 7',
+    sahipsizFiyat:140,
+    isSpecial:false, specialBonus:'', specialDesc:'',
+  },
+  {
+    isim:'VİSKİ FABRİKASI',  ico:'building-r.png',
+    urun:'VİSKİ',             urunPng:'urun_viski.png',             urunIco:'🥃',
+    uretim:750,               fiyat:90,
+    stok:1500,                stokMax:4500,
+    binaFiyat:8000000,        minRank:'MİN. RANK 7',
+    sahipsizFiyat:45,
+    isSpecial:false, specialBonus:'', specialDesc:'',
+  },
+  {
+    isim:'ALTIN FABRİKASI',  ico:'building-m.png',
+    urun:'ALTIN',             urunPng:'urun_altin.png',             urunIco:'🥇',
+    uretim:200,               fiyat:2400,
+    stok:400,                 stokMax:1200,
+    binaFiyat:8000000,        minRank:'MİN. RANK 8',
+    sahipsizFiyat:1200,
+    isSpecial:false, specialBonus:'', specialDesc:'',
+  },
+  {
+    isim:'ELMAS FABRİKASI',  ico:'building-n.png',
+    urun:'ELMAS',             urunPng:'urun_elmas.png',             urunIco:'💎',
+    uretim:100,               fiyat:5600,
+    stok:200,                 stokMax:600,
+    binaFiyat:9000000,        minRank:'MİN. RANK 9',
+    sahipsizFiyat:2800,
+    isSpecial:false, specialBonus:'', specialDesc:'',
+  },
+  {
+    isim:'LABORATUVAR',      ico:'building-e.png',
+    urun:'WHITE',             urunPng:'urun_white.png',             urunIco:'💊',
+    uretim:300,               fiyat:11000,
+    stok:150,                 stokMax:900,
+    binaFiyat:9000000,        minRank:'MİN. RANK 9',
+    sahipsizFiyat:5500,
+    isSpecial:false, specialBonus:'', specialDesc:'',
+  },
+  {
+    isim:'MERMİ FABRİKASI',  ico:'building-k.png',
+    urun:'MERMİ',             urunPng:'bulletfab.png',             urunIco:'🔫',
+    uretim:2000,              fiyat:200,
+    stok:8000,                stokMax:48000,
+    binaFiyat:10000000,       minRank:'MİN. RANK 6',
+    sahipsizFiyat:50,
+    isSpecial:false, specialBonus:'', specialDesc:'',
+  },
+];
+
+var FAB = FABRIKALAR[0];
+var currentFabIdx = 0;
+var MODE = 'sahipsiz';
+var buyQty = 10;
+var mermiEk = 52000;
+var mermiMax = 100000;
+
+// BUILD PILL SELECTOR
+(function buildPills(){
+  var c = document.getElementById('fab-pills');
+  FABRIKALAR.forEach(function(f, i){
+    var d = document.createElement('div');
+    d.className = 'fab-pill' + (i===0?' active':'');
+    d.innerHTML = '<span class="pill-ico">'+(f.urunPng?'<img src="'+BASE+f.urunPng+'" class="urun-ico-img" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span class="urun-ico-fb">'+f.urunIco+'</span>':f.urunIco)+'</span>'+f.isim.replace(' FABRİKASI','').replace('FABRİKASI','');
+    d.onclick = function(){
+      currentFabIdx = i;
+      FAB = JSON.parse(JSON.stringify(FABRIKALAR[i])); // fresh copy
+      applySpecial(FAB);
+      buyQty = 10;
+      mermiEk = 52000;
+      document.querySelectorAll('.fab-pill').forEach(function(p,pi){ p.classList.toggle('active', pi===i); });
+      // update header icon
+      var _hdIco = document.getElementById('hd-ico');
+      _hdIco.style.display = '';
+      _hdIco.parentNode.querySelector('.hd-ico-fb').style.display = 'none';
+      _hdIco.parentNode.querySelector('.hd-ico-fb').textContent = f.urunIco || '';
+      _hdIco.src = BASE + f.ico;
+    };
+    c.appendChild(d);
+  });
+})();
+
+function openPop(mode){
+  MODE = mode;
+  FAB = JSON.parse(JSON.stringify(FABRIKALAR[currentFabIdx]));
+  applySpecial(FAB);
+  buyQty = 10;
+  mermiEk = 52000;
+  var _hdIco2 = document.getElementById('hd-ico');
+  _hdIco2.style.display = '';
+  _hdIco2.parentNode.querySelector('.hd-ico-fb').style.display = 'none';
+  _hdIco2.parentNode.querySelector('.hd-ico-fb').textContent = FAB.urunIco || '';
+  _hdIco2.src = BASE + FAB.ico;
+  document.getElementById('ov').style.display = 'block';
+  document.getElementById('pop').classList.add('open');
+  render();
+}
+function closePop(){
+  document.getElementById('ov').style.display = 'none';
+  document.getElementById('pop').classList.remove('open');
+}
+
+function render(){
+  var gFiyat = (MODE==='sahipsiz' && FAB.sahipsizFiyat!=null) ? FAB.sahipsizFiyat : FAB.fiyat;
+  document.getElementById('hero-val').textContent = FAB.stok.toLocaleString();
+  document.getElementById('hero-sub').innerHTML = (FAB.urunPng?'<img src="'+BASE+FAB.urunPng+'" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" onerror="this.style.display=\'none\'">&nbsp;':FAB.urunIco+' ')+FAB.urun+' · $'+gFiyat+'/adet';
+  document.getElementById('hero-uretim').textContent = FAB.uretim.toLocaleString()+'/s';
+  var pct = Math.min(100, Math.round(FAB.stok / FAB.stokMax * 100));
+  document.getElementById('hero-bar').style.width = pct+'%';
+
+  if(MODE==='benim'){
+    document.getElementById('stok-hero').style.display = '';
+    renderTabs(['KASA','MAL','SAVUNMA']);
+    renderKasa(); renderMal(); renderSavunma();
+    switchTab(0);
+  } else if(MODE==='baskasi'){
+    document.getElementById('stok-hero').style.display = '';
+    renderTabs(['ÜRÜNİ AL']);
+    renderUruniAl();
+    switchTab(0);
+  } else {
+    document.getElementById('stok-hero').style.display = 'none';
+    renderTabs(['BİNAYI AL']);
+    renderBinayiAl('sc0');
+    switchTab(0);
+  }
+}
+
+function renderTabs(labels){
+  var tb = document.getElementById('tab-bar');
+  tb.innerHTML='';
+  labels.forEach(function(lbl,i){
+    var d=document.createElement('div');
+    d.className='tab'+(i===0?' active':'');
+    d.textContent=lbl;
+    d.onclick=(function(idx){return function(){switchTab(idx);};})(i);
+    tb.appendChild(d);
+  });
+}
+
+function switchTab(i){
+  document.querySelectorAll('.tab').forEach(function(t,idx){t.classList.toggle('active',idx===i);});
+  ['sc0','sc1','sc2'].forEach(function(id,idx){
+    var el=document.getElementById(id);
+    el.classList.remove('on');
+    if(idx===i) el.classList.add('on');
+  });
+}
+
+function renderUruniAl(){
+  var sc=document.getElementById('sc0'); var html='';
+  if(FAB.isSpecial) html+='<div class="special-bar"><span class="special-bar-txt">⭐ '+FAB.specialBonus+' — '+FAB.specialDesc+'</span></div>';
+  if(MODE==='baskasi') html+='<div class="row"><span class="row-lbl">SAHİP</span><span class="row-val">CORLEONE_DON</span></div>';
+  var gFiyat=(MODE==='sahipsiz'&&FAB.sahipsizFiyat!=null)?FAB.sahipsizFiyat:FAB.fiyat;
+  html+='<span class="sc-lbl">'+urunImg(FAB)+' '+FAB.urun+' SATIN AL</span>';
+  html+='<div class="qty-wrap">';
+  html+='<div class="qty-row"><button class="qty-btn" onclick="chQ(-10)">−</button><div class="qty-val" id="qty">'+buyQty+'</div><button class="qty-btn" onclick="chQ(10)">+</button></div>';
+  html+='<div class="chips" id="q-chips"></div>';
+  html+='<div class="total-row"><span class="total-lbl">$'+gFiyat+'/adet · STOK: '+FAB.stok.toLocaleString()+'</span><span class="total-val" id="total">$'+(buyQty*gFiyat).toLocaleString()+'</span></div>';
+  html+='</div>';
+  html+='<div class="btn-wrap"><button class="btn" onclick="alUrun()">'+urunImg(FAB)+' SATIN AL</button>';
+  if(MODE==='baskasi') html+='<button class="btn red" onclick="saldir()">&#9876;&#65039; SALDIR</button>';
+  html+='</div>';
+  sc.innerHTML=html;
+  buildChips(gFiyat);
+}
+
+function renderBinayiAl(slotId){
+  var sc=document.getElementById(slotId||'sc1');
+  // SAHİPSİZ: üretim miktarı / ürün tipi / aile komisyonu GİZLİ (iç mekanik bilgi)
+  var html='<div class="row"><span class="row-lbl">GEREKLİ RANK</span><span class="row-val gold">'+FAB.minRank+'</span></div>';
+  html+='<div class="row"><span class="row-lbl">SATIN ALMA FİYATI</span><span class="row-val green">$'+FAB.binaFiyat.toLocaleString()+'</span></div>';
+  html+='<div class="btn-wrap"><button class="btn" onclick="binaAl()">BİNAYI SATIN AL</button></div>';
+  sc.innerHTML=html;
+}
+
+function renderKasa(){
+  var sc=document.getElementById('sc0');
+  var kasaTutari = FAB.uretim * 24 * FAB.fiyat;
+  var html='';
+  if(FAB.isSpecial) html+='<div class="special-bar"><span class="special-bar-txt">⭐ '+FAB.specialBonus+' — '+FAB.specialDesc+'</span></div>';
+  html+='<div class="kasa-hero">';
+  html+='<span class="kasa-hero-lbl">KASA BAKİYESİ</span>';
+  html+='<div class="kasa-hero-val">$'+kasaTutari.toLocaleString()+'</div>';
+  html+='<span class="kasa-hero-sub">Oyuncuların alımlarından biriken para</span>';
+  html+='</div>';
+  html+='<div class="row"><span class="row-lbl">AİLE KOMİSYONU</span><span class="row-val red">%10</span></div>';
+  html+='<div class="btn-wrap"><button class="btn" onclick="kasaCek()">💰 KASAYI ÇEK</button><button class="btn danger" onclick="binaySat()">BİNAYI SAT</button></div>';
+  sc.innerHTML=html;
+}
+
+function renderMal(){
+  var sc=document.getElementById('sc1');
+  var html='<span class="sc-lbl">ÜRETİM DURUMU</span>';
+  html+='<div class="row"><span class="row-lbl">SAAT BAŞI ÜRETİM</span><span class="row-val green">+'+FAB.uretim.toLocaleString()+'</span></div>';
+  html+='<div class="row"><span class="row-lbl">MEVCUT STOK</span><span class="row-val">'+FAB.stok.toLocaleString()+' '+urunImg(FAB)+'</span></div>';
+  html+='<span class="sc-lbl">FİYAT BELIRLE — MEVCUT: $'+FAB.fiyat+'/adet</span>';
+  html+='<div class="inp-wrap" style="padding:7px 12px;border-bottom:1px solid #f0f0f0;">';
+  html+='<span style="font-family:\'Oswald\',sans-serif;font-weight:600;font-size:9px;color:#C9A84C;display:block;margin-bottom:2px;">YENİ FİYAT ($)</span>';
+  html+='<input id="f-inp" type="number" min="1" placeholder="'+FAB.fiyat+'" style="width:100%;border:none;outline:none;font-family:\'Oswald\',sans-serif;font-weight:700;font-size:20px;color:#111;background:transparent;" oninput="fiyatUpd()">';
+  html+='</div>';
+  html+='<div id="f-prev" style="display:none;margin:0 12px 6px;padding:7px 10px;border:1px solid #f0f0f0;">';
+  html+='<div style="display:flex;justify-content:space-between;padding:2px 0;"><span style="font-family:\'Oswald\',sans-serif;font-weight:600;font-size:9px;color:#C9A84C;">MEVCUT</span><span style="font-family:\'Oswald\',sans-serif;font-weight:700;font-size:14px;color:#aaa;">$'+FAB.fiyat+'/adet</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;padding:2px 0;"><span style="font-family:\'Oswald\',sans-serif;font-weight:600;font-size:9px;color:#C9A84C;">YENİ</span><span style="font-family:\'Oswald\',sans-serif;font-weight:700;font-size:14px;color:#111;" id="f-yeni">$0/adet</span></div>';
+  html+='</div>';
+  html+='<div class="btn-wrap"><button class="btn" onclick="fiyatKaydet()">FİYATI KAYDET</button></div>';
+  sc.innerHTML=html;
+}
+
+function fiyatUpd(){
+  var v=parseInt(document.getElementById('f-inp').value)||0;
+  var p=document.getElementById('f-prev');
+  if(v>0){
+    document.getElementById('f-yeni').textContent='$'+v+'/adet';
+    p.style.display='block';
+  } else {
+    p.style.display='none';
+  }
+}
+
+function fiyatKaydet(){
+  var v=parseInt((document.getElementById('f-inp')||{}).value)||0;
+  if(v<1){toast('Geçerli fiyat gir!');return;}
+  FAB.fiyat=v;
+  toast('Fiyat $'+v+'/adet olarak ayarlandı');
+  render();
+}
+
+function renderSavunma(){
+  var sc=document.getElementById('sc2');
+  var pct=Math.round(mermiEk/mermiMax*100);
+  var html='<div class="sav-hero">';
+  html+='<span class="sav-lbl">SAVUNMA MERMİLERİ</span>';
+  html+='<div class="sav-bar-wrap"><div class="sav-bar" style="width:'+pct+'%"></div></div>';
+  html+='<div class="sav-nums"><span class="sav-cur">'+mermiEk.toLocaleString()+'</span><span class="sav-max">/ '+mermiMax.toLocaleString()+' MAX</span></div>';
+  html+='<span class="sav-auto">✓ OTOMATİK: 10.000 MERMİ — %100 KS</span>';
+  html+='</div>';
+  html+='<div class="mermi-row"><div><div class="mermi-lbl">OTOMATİK SAVUNMA</div><div class="mermi-sub">Her saldırıda ateşlenir</div></div><span class="row-val green">10.000</span></div>';
+  html+='<div class="mermi-row"><div><div class="mermi-lbl">EK MERMİ</div><div class="mermi-sub">Otomatikten sonra devreye girer</div></div><span class="mermi-adet">'+mermiEk.toLocaleString()+'</span></div>';
+  html+='<span class="sc-lbl" style="margin-top:4px;">MERMİ İŞLEMİ</span>';
+  html+='<div class="inp-wrap"><span class="inp-lbl">MİKTAR</span><input id="mermi-inp" type="number" min="1" placeholder="0" class="inp"></div>';
+  html+='<div class="btn-wrap"><button class="btn" onclick="mermiYukle()">MERMİ YÜKLE</button><button class="btn outline" onclick="mermiCek()">MERMİ ÇEK</button></div>';
+  sc.innerHTML=html;
+}
+
+function buildChips(gFiyat){
+  var c=document.getElementById('q-chips'); if(!c) return; c.innerHTML='';
+  [10,50,100,500,1000].forEach(function(v){
+    var d=document.createElement('div');
+    d.className='ch'+(v===buyQty?' sel':'');
+    d.textContent=v>=1000?(v/1000)+'K':v;
+    d.onclick=function(){ buyQty=v; buildChips(gFiyat); updQ(gFiyat); };
+    c.appendChild(d);
+  });
+}
+function chQ(d){
+  var gFiyat=(MODE==='sahipsiz'&&FAB.sahipsizFiyat!=null)?FAB.sahipsizFiyat:FAB.fiyat;
+  buyQty=Math.max(1,Math.min(FAB.stok,buyQty+d)); updQ(gFiyat); buildChips(gFiyat);
+}
+function updQ(gFiyat){
+  if(!gFiyat) gFiyat=(MODE==='sahipsiz'&&FAB.sahipsizFiyat!=null)?FAB.sahipsizFiyat:FAB.fiyat;
+  var q=document.getElementById('qty'), t=document.getElementById('total');
+  if(q) q.textContent=buyQty.toLocaleString();
+  if(t) t.textContent='$'+(buyQty*gFiyat).toLocaleString();
+}
+function alUrun(){
+  if(buyQty>FAB.stok){toast('Yetersiz stok!');return;}
+  FAB.stok-=buyQty;
+  toast(buyQty.toLocaleString()+' '+FAB.urun+' alındı');
+  render();
+}
+function binaAl(){ toast('Bina satın alma — $'+FAB.binaFiyat.toLocaleString()); }
+function binaySat(){ if(confirm('Binayı satmak istediğine emin misin?')) toast('Bina satışa çıkarıldı'); }
+function kasaCek(){
+  var kasaTutari = FAB.uretim * 24 * FAB.fiyat;
+  toast('$'+kasaTutari.toLocaleString()+' kasadan çekildi');
+  render();
+}
+function saldir(){ toast('⚔️ Saldırı başlatılıyor...'); }
+function mermiYukle(){
+  var v=document.getElementById('mermi-inp');
+  if(!v||!v.value||v.value<=0){toast('Miktar gir');return;}
+  mermiEk=Math.min(mermiMax,mermiEk+parseInt(v.value));
+  toast(parseInt(v.value).toLocaleString()+' mermi yüklendi');
+  v.value=''; renderSavunma();
+}
+function mermiCek(){
+  var v=document.getElementById('mermi-inp');
+  if(!v||!v.value||v.value<=0){toast('Miktar gir');return;}
+  mermiEk=Math.max(0,mermiEk-parseInt(v.value));
+  toast(parseInt(v.value).toLocaleString()+' mermi çekildi');
+  v.value=''; renderSavunma();
+}
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.style.opacity=1;
+  setTimeout(function(){t.style.opacity=0;},2200);
+}
+</script>
+</body>
+</html>

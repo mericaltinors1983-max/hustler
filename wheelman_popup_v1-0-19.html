@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Wheelman</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:#888; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+
+/* OVERLAY */
+#ov { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:10000; }
+
+/* MATRIX CANVAS */
+#mx { display:none; position:fixed; bottom:116px; left:50%; transform:translateX(-50%); width:320px; height:520px; z-index:10002; }
+
+/* POPUP */
+#pop {
+  display:none; position:fixed;
+  bottom:116px; left:50%; transform:translateX(-50%);
+  width:320px; height:520px;
+  background:#fff;
+  border:1.5px solid #C9A84C;
+  border-bottom:none;
+  flex-direction:column;
+  overflow:hidden;
+  z-index:10001;
+  opacity:0;
+}
+#pop.open { display:flex; }
+#pop.show { animation:popIn .3s ease forwards; }
+@keyframes popIn { from{opacity:0;transform:translateX(-50%) scale(.94)} to{opacity:1;transform:translateX(-50%) scale(1)} }
+
+/* HEADER */
+#hd {
+  height:64px; flex-shrink:0;
+  background:#fff; border-bottom:1.5px solid #111;
+  display:flex; align-items:center;
+  padding:0 10px; position:relative;
+}
+#hd .hd-gif { width:35px; height:35px; object-fit:contain; flex-shrink:0; }
+#hd .hd-logo { position:absolute; left:0; right:0; top:0; bottom:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+#hd .hd-logo img { height:54px; max-width:200px; object-fit:contain; }
+#hd .hd-right { margin-left:auto; display:flex; align-items:center; gap:4px; z-index:1; }
+#hd .hd-btn { width:28px; height:28px; background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+#hd .hd-btn img { width:28px; height:28px; object-fit:contain; }
+
+/* SCREENS */
+#screens { flex:1; position:relative; overflow:hidden; }
+.sc { display:none; position:absolute; inset:0; background:#fff; }
+.sc.on { display:flex; }
+#sc-main.on, #sc-gif.on { display:block; }
+.sc.on { display:block; }
+
+/* MAIN & GIF — aynı layout */
+#sc-main, #sc-gif { position:absolute; inset:0; }
+
+.png-top {
+  position:absolute;
+  top:40px; left:50%; transform:translateX(-50%);
+  width:180px; height:160px; object-fit:contain;
+}
+.bot-area {
+  position:absolute;
+  bottom:60px; left:0; right:0;
+  display:flex; flex-direction:column;
+  align-items:center; gap:12px;
+}
+.bot-title { font-family:'Bebas Neue',sans-serif; font-size:26px; color:#111; letter-spacing:3px; }
+.bot-desc  { font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; color:#C9A84C; }
+.bot-btn   { width:90px; height:90px; object-fit:contain; cursor:pointer; }
+.bot-btn:active { transform:scale(.9); }
+.bot-gif   { width:90px; height:90px; object-fit:contain; }
+
+/* CD badge */
+#cd-badge { display:none; flex-direction:column; align-items:center; }
+#cd-badge small { font-family:'Oswald',sans-serif; font-size:11px; font-weight:600; color:#888; letter-spacing:1px; }
+#cd-val { font-family:'Bebas Neue',sans-serif; font-size:28px; color:#C9A84C; letter-spacing:2px; }
+
+/* WIN */
+#sc-win {
+  flex-direction:column; align-items:center;
+  padding:16px 20px; gap:8px; text-align:center;
+}
+.win-eyebrow { font-family:'Oswald',sans-serif; font-size:13px; font-weight:700; color:#B8860B; letter-spacing:1.5px; }
+.win-headline { font-family:'Bebas Neue',sans-serif; font-size:26px; color:#111; letter-spacing:3px; }
+.win-divider  { width:100%; height:1px; background:#C9A84C44; }
+.win-car-img  { width:200px; height:120px; object-fit:contain; }
+.win-car-name { font-family:'Bebas Neue',sans-serif; font-size:24px; color:#111; letter-spacing:2px; }
+.win-tier     { font-family:'Oswald',sans-serif; font-size:12px; font-weight:700; color:#C9A84C; letter-spacing:1px; }
+.win-added    { font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; color:#C9A84C; letter-spacing:1px; }
+.win-flavor   { font-family:'Oswald',sans-serif; font-size:13px; font-weight:400; color:#888; font-style:italic; }
+.win-btn { width:100%; height:44px; background:#fff; color:#C9A84C; border:1.5px solid #111; font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; letter-spacing:2px; cursor:pointer; margin-top:4px; }
+.win-btn:active { transform:scale(.97) translateY(1px); }
+
+/* JAIL */
+#sc-jail {
+  flex-direction:column; align-items:center;
+  justify-content:center; gap:10px; text-align:center; padding:20px;
+}
+.jail-caught { font-family:'Oswald',sans-serif; font-size:13px; font-weight:700; color:#3b82f6; letter-spacing:1.5px; }
+.jail-title  { font-family:'Bebas Neue',sans-serif; font-size:32px; color:#c62828; letter-spacing:3px; }
+.jail-ico    { font-size:56px; line-height:1; }
+.jail-timer  { font-family:'Bebas Neue',sans-serif; font-size:56px; color:#111; letter-spacing:4px; }
+.jail-flavor { font-family:'Oswald',sans-serif; font-size:13px; font-weight:400; color:#888; font-style:italic; }
+.jail-btn { width:220px; height:44px; background:#fff; color:#c62828; border:1.5px solid #c62828; font-family:'Oswald',sans-serif; font-size:13px; font-weight:700; letter-spacing:2px; cursor:pointer; margin-top:4px; }
+
+/* INFO */
+#sc-info { flex-direction:column; }
+.info-head { padding:12px 16px; border-bottom:1px solid #C9A84C44; flex-shrink:0; }
+.info-ttl  { font-family:'Bebas Neue',sans-serif; font-size:26px; color:#111; letter-spacing:3px; }
+.info-body { flex:1; overflow-y:auto; padding:12px 16px; }
+.info-row  { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid #f5f5f5; }
+.info-row:last-child { border:none; }
+.info-lbl  { font-family:'Oswald',sans-serif; font-size:11px; font-weight:600; color:#888; letter-spacing:1px; }
+.info-val  { font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; color:#111; text-align:right; }
+.info-back { width:100%; height:44px; background:#111; color:#fff; border:none; font-family:'Oswald',sans-serif; font-size:13px; font-weight:700; letter-spacing:2px; cursor:pointer; flex-shrink:0; }
+
+/* CLOSE BAR */
+#closebar {
+  height:50px; flex-shrink:0;
+  border-top:1.5px solid #111;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; background:#fff;
+}
+#closebar img { height:44px; object-fit:contain; }
+
+/* FLOAT */
+.fl { position:fixed; font-family:'Oswald',sans-serif; font-size:20px; font-weight:800; pointer-events:none; z-index:99999; animation:flUp 1.6s ease-out forwards; }
+@keyframes flUp { 0%{opacity:1;transform:translateY(0) scale(1)} 15%{opacity:1;transform:translateY(-16px) scale(1.15)} 100%{opacity:0;transform:translateY(-90px) scale(.85)} }
+</style>
+</head>
+<body>
+
+<div id="ov" onclick="close_()"></div>
+<canvas id="mx"></canvas>
+
+<button onclick="open_()" style="padding:12px 28px;background:#111;color:#fff;border:none;font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;cursor:pointer;">WHEELMAN AÇ</button>
+
+<div id="pop">
+
+  <!-- HEADER -->
+  <div id="hd">
+    <img class="hd-gif"
+         src="https://mericaltinors1983-max.github.io/LaFamilia/gif_wheelman.gif"
+         onerror="this.style.fontSize='28px';this.outerHTML='<span style=\'font-size:28px\'>🚗</span>'">
+    <div class="hd-logo">
+      <img src="https://mericaltinors1983-max.github.io/LaFamilia/lafamilia_logo.png"
+           onerror="this.style.display='none'">
+    </div>
+    <div class="hd-right">
+      <button class="hd-btn" onclick="show_('sc-info')">
+        <img src="https://mericaltinors1983-max.github.io/LaFamilia/icon_info.png"
+             onerror="this.outerHTML='<span style=\'font-size:20px;font-weight:700;color:#111\'>i</span>'">
+      </button>
+      <button class="hd-btn" onclick="close_()">
+        <img src="https://mericaltinors1983-max.github.io/LaFamilia/close_icon.png"
+             onerror="this.outerHTML='<span style=\'font-size:20px;font-weight:700;color:#111\'>✕</span>'">
+      </button>
+    </div>
+  </div>
+
+  <div id="screens">
+
+    <!-- MAIN -->
+    <div class="sc on" id="sc-main">
+      <img class="png-top"
+           src="https://mericaltinors1983-max.github.io/LaFamilia/wheelman_main.png"
+           onerror="this.outerHTML='<span style=\'position:absolute;top:40px;left:50%;transform:translateX(-50%);font-size:100px\'>🚗</span>'">
+      <div class="bot-area">
+        <div class="bot-title">WHEELMAN</div>
+        <div class="bot-desc">"Sokakta bekleyen arabayı al."</div>
+        <img class="bot-btn" id="steal-btn"
+             src="https://mericaltinors1983-max.github.io/LaFamilia/btn_steal.png"
+             onclick="steal()"
+             onerror="this.outerHTML='<button onclick=&quot;steal()&quot; style=&quot;width:160px;height:44px;background:#fff;color:#C9A84C;border:1.5px solid #111;font-family:Oswald,sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;cursor:pointer;&quot;>STEAL CAR</button>'">
+        <div id="cd-badge">
+          <small>COOLDOWN</small>
+          <span id="cd-val">10:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GIF -->
+    <div class="sc" id="sc-gif">
+      <img class="png-top"
+           src="https://mericaltinors1983-max.github.io/LaFamilia/wheelman_main.png"
+           onerror="this.outerHTML='<span style=\'position:absolute;top:40px;left:50%;transform:translateX(-50%);font-size:100px\'>🚗</span>'">
+      <div class="bot-area">
+        <div class="bot-title">WHEELMAN</div>
+        <div class="bot-desc">"Sokakta bekleyen arabayı al."</div>
+        <img class="bot-gif"
+             src="https://mericaltinors1983-max.github.io/LaFamilia/wheelman_action.gif"
+             onerror="this.outerHTML='<span style=\'font-size:56px\'>🚗💨</span>'">
+      </div>
+    </div>
+
+    <!-- WIN -->
+    <div class="sc" id="sc-win">
+      <div class="win-eyebrow" id="win-city">ISTANBUL · ENFORCER</div>
+      <div class="win-headline">WHEELMANINDI</div>
+      <div class="win-divider"></div>
+      <img class="win-car-img" id="win-car-img" src=""
+           onerror="this.outerHTML='<span style=\'font-size:80px\'>🚗</span>'">
+      <div class="win-car-name" id="win-car-name">—</div>
+      <div class="win-tier" id="win-tier">T3 · RARE</div>
+      <div class="win-added">ENVANTERİNE EKLENDİ</div>
+      <div class="win-divider"></div>
+      <div class="win-flavor" id="win-flavor">"Clean getaway. Not a scratch."</div>
+      <button class="win-btn" onclick="close_()">TAMAM</button>
+    </div>
+
+    <!-- JAIL -->
+    <div class="sc" id="sc-jail">
+      <div class="jail-caught">POLİS TARAFINDAN YAKALANDIN</div>
+      <div class="jail-title">HAPİS</div>
+      <div class="jail-ico">🚔</div>
+      <div class="jail-timer" id="jail-timer">1:00</div>
+      <div class="jail-flavor" id="jail-flavor">"Alarm çaldı. Şansın yoktu."</div>
+      <img src="https://mericaltinors1983-max.github.io/LaFamilia/btn_ok.png"
+           onclick="close_()"
+           style="height:52px;object-fit:contain;cursor:pointer;"
+           onerror="this.outerHTML='<button onclick=&quot;close_()&quot; class=&quot;jail-btn&quot;>TAMAM</button>'">
+    </div>
+
+    <!-- INFO -->
+    <div class="sc" id="sc-info">
+      <div class="info-head"><div class="info-ttl">WHEELMAN</div></div>
+      <div class="info-body">
+        <div class="info-row"><span class="info-lbl">Cooldown</span><span class="info-val">10 dakika</span></div>
+        <div class="info-row"><span class="info-lbl">XP</span><span class="info-val">+75</span></div>
+        <div class="info-row"><span class="info-lbl">Ödül</span><span class="info-val">Araba (rank bazlı tier)</span></div>
+        <div class="info-row"><span class="info-lbl">Hapis (başarısız)</span><span class="info-val">R1-5:1dk · R6-10:2dk · R11+:3dk</span></div>
+      </div>
+      <button class="info-back" onclick="show_('sc-main')">← GERİ</button>
+    </div>
+
+  </div>
+
+  <!-- CLOSE BAR -->
+  <div id="closebar" onclick="close_()">
+    <img src="https://mericaltinors1983-max.github.io/LaFamilia/btn_close_bar.png"
+         onerror="this.outerHTML='<span style=\'font-family:Oswald,sans-serif;font-size:11px;font-weight:700;color:#B8860B;letter-spacing:2px;\'>KAPAT</span>'">
+  </div>
+
+</div>
+
+<script>
+var BASE='https://mericaltinors1983-max.github.io/LaFamilia/';
+var PLAYER=window.PLAYER||{rank:7,rankName:'Enforcer',city:'Istanbul'};
+var RANK_ID={'Street Rat':1,'Runner':2,'Hustler':3,'Crook':4,'Thug':5,'Gangster':6,'Enforcer':7,'Operator':8,'Hitman':9,'Underboss':10,'Strategist':11,'Boss':12,'Crew Chief':13,'Godfather':14};
+var BASARI={1:.55,2:.58,3:.62,4:.65,5:.68,6:.71,7:.74,8:.77,9:.80,10:.83,11:.85,12:.87,13:.89,14:.90};
+var TIER_NAME={1:'NORMAL',2:'RARE',3:'EPIC',4:'LEGENDARY',5:'MYTHIC'};
+var CARS={
+  1:[{name:'Tin Racer',img:'https://files.catbox.moe/t88bjy.png'}],
+  2:[{name:'Night Rider',img:'https://files.catbox.moe/if6vgh.png'}],
+  3:[{name:'Charger',img:'https://files.catbox.moe/gkg8bc.png'},{name:'GTO',img:'https://files.catbox.moe/39rcim.png'},{name:'Barracuda',img:'https://files.catbox.moe/q8rtp1.png'}],
+  4:[{name:'Black Baron',img:'https://files.catbox.moe/pz3uei.png'}],
+  5:[{name:'Shadow V12',img:'https://files.catbox.moe/pak00w.png'}],
+};
+var FL_WIN=["Clean getaway. Not a scratch.","Araç kayboldu geceye karıştı.","Sahip sabaha kadar fark etmez.","Bir hamlede hallettim."];
+var FL_FAIL=["Alarm çaldı. Şansın yoktu.","Polis bekliyordu. Yanlış araba.","Biri gördü. Daha iyi bir yer seç."];
+
+var CD=0,CD_INT=null,JAIL_INT=null,MX_RAF=null;
+
+function rid(){return RANK_ID[PLAYER.rankName]||7;}
+function tier(r){return r>=12?5:r>=9?4:r>=6?3:r>=3?2:1;}
+
+function show_(id){
+  document.querySelectorAll('.sc').forEach(function(s){s.classList.remove('on');});
+  document.getElementById(id).classList.add('on');
+}
+
+// Matrix
+var MX_CHARS='ABCDEFGHIJKLMNOPRSTUVWXYZ0123456789$#@!LaFamilia';
+function runMatrix(canvas,cb){
+  var ctx=canvas.getContext('2d');
+  var W=canvas.width=320,H=canvas.height=520;
+  var fs=13,cols=Math.floor(W/fs),drops=[];
+  for(var i=0;i<cols;i++) drops[i]=Math.random()*(-H*0.5);
+  var t0=null;
+  function draw(ts){
+    if(!t0)t0=ts;
+    var p=Math.min((ts-t0)/700,1);
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,255,255,'+(0.9*(1-p*0.2))+')';
+    ctx.font=fs+'px monospace';
+    for(var i=0;i<drops.length;i++){
+      ctx.fillText(MX_CHARS[Math.floor(Math.random()*MX_CHARS.length)],i*fs,drops[i]);
+      drops[i]+=fs*(1.2+p*2);
+      if(drops[i]>H)drops[i]=Math.random()*-40;
+    }
+    if(ts-t0<700){MX_RAF=requestAnimationFrame(draw);}
+    else{ctx.clearRect(0,0,W,H);if(cb)cb();}
+  }
+  MX_RAF=requestAnimationFrame(draw);
+}
+
+function open_(){
+  if(CD>0){var m=Math.floor(CD/60),s=CD%60;alert('Cooldown: '+m+':'+(s<10?'0':'')+s);return;}
+  if(MX_RAF){cancelAnimationFrame(MX_RAF);MX_RAF=null;}
+  var pop=document.getElementById('pop');
+  var mx=document.getElementById('mx');
+  document.getElementById('ov').style.display='block';
+  mx.style.display='block';
+  pop.classList.add('open');
+  pop.classList.remove('show');
+  show_('sc-main');
+  runMatrix(mx,function(){
+    mx.style.display='none';
+    pop.classList.add('show');
+  });
+}
+
+function close_(){
+  if(MX_RAF){cancelAnimationFrame(MX_RAF);MX_RAF=null;}
+  document.getElementById('mx').style.display='none';
+  document.getElementById('ov').style.display='none';
+  var pop=document.getElementById('pop');
+  pop.classList.remove('open');
+  pop.classList.remove('show');
+}
+
+function startCD(s){
+  CD=s;clearInterval(CD_INT);
+  var btn=document.getElementById('steal-btn');
+  var badge=document.getElementById('cd-badge');
+  if(btn)btn.style.display='none';
+  if(badge)badge.style.display='flex';
+  CD_INT=setInterval(function(){
+    CD--;
+    var el=document.getElementById('cd-val');
+    if(el){var m=Math.floor(CD/60),x=CD%60;el.textContent=m+':'+(x<10?'0':'')+x;}
+    if(CD<=0){
+      clearInterval(CD_INT);
+      if(btn)btn.style.display='';
+      if(badge)badge.style.display='none';
+    }
+  },1000);
+}
+
+function startJail(s){
+  clearInterval(JAIL_INT);
+  function up(n){var m=Math.floor(n/60),x=n%60;var el=document.getElementById('jail-timer');if(el)el.textContent=m+':'+(x<10?'0':'')+x;}
+  up(s);
+  JAIL_INT=setInterval(function(){s--;up(s);if(s<=0)clearInterval(JAIL_INT);},1000);
+}
+
+function float_(txt,color){
+  return new Promise(function(res){
+    var el=document.createElement('div');
+    el.className='fl';el.textContent=txt;el.style.color=color;
+    el.style.left=(window.innerWidth/2-50)+'px';
+    el.style.top=(window.innerHeight*0.45)+'px';
+    document.body.appendChild(el);
+    setTimeout(function(){el.remove();res();},1650);
+  });
+}
+
+async function floats(list){
+  for(var i=0;i<list.length;i++){
+    await float_(list[i].t,list[i].c);
+    await new Promise(function(r){setTimeout(r,80);});
+  }
+}
+
+function steal(){
+  show_('sc-gif');
+  var r=rid();
+  var ok=Math.random()<(BASARI[r]||0.74);
+  setTimeout(function(){
+    if(ok){
+      var t=tier(r);
+      var cars=CARS[t]||CARS[3];
+      var car=cars[Math.floor(Math.random()*cars.length)];
+      var fl=FL_WIN[Math.floor(Math.random()*FL_WIN.length)];
+      var img=document.getElementById('win-car-img');
+      if(img)img.src=car.img;
+      var nm=document.getElementById('win-car-name');if(nm)nm.textContent=car.name.toUpperCase();
+      var tr=document.getElementById('win-tier');if(tr)tr.textContent='T'+t+' · '+(TIER_NAME[t]||'');
+      var fv=document.getElementById('win-flavor');if(fv)fv.textContent='"'+fl+'"';
+      var cy=document.getElementById('win-city');if(cy)cy.textContent=(PLAYER.city||'ISTANBUL').toUpperCase()+' · '+(PLAYER.rankName||'ENFORCER').toUpperCase();
+      show_('sc-win');
+      startCD(600);
+      floats([{t:'+75 XP',c:'#f97316'},{t:'🚗 ARABA EKLENDİ',c:'#C9A84C'}]);
+    } else {
+      var fl=FL_FAIL[Math.floor(Math.random()*FL_FAIL.length)];
+      var fv=document.getElementById('jail-flavor');if(fv)fv.textContent='"'+fl+'"';
+      var jailSec=r>=11?180:r>=6?120:60;
+      startJail(jailSec);
+      show_('sc-jail');
+      startCD(600);
+      floats([{t:'+75 XP',c:'#f97316'}]);
+    }
+  },2000);
+}
+</script>
+</body>
+</html>

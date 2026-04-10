@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>Travel Mini Banner v1-0-0</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:#fff;font-family:'Oswald',sans-serif;display:flex;flex-direction:column;height:100dvh;overflow:hidden;user-select:none;}
+
+/* ─── MOCK SHELL ─── */
+#topbar{height:44px;background:#fff;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;padding:0 10px;gap:8px;font-size:10px;color:#111;font-weight:700;flex-shrink:0;}
+#topnav{height:42px;background:#fff;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;justify-content:space-around;flex-shrink:0;}
+#topnav span{font-size:10px;color:#444;padding:4px 8px;}
+#main{flex:1;overflow:hidden;position:relative;background:#fff;}
+#bottombar{height:74px;background:#fff;border-top:1px solid #e0e0e0;display:flex;align-items:center;justify-content:space-around;padding:0 0 6px;flex-shrink:0;position:relative;}
+#bottombar span{font-size:9px;color:#444;font-weight:700;}
+
+/* map mock */
+#mock-map{
+  width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:#f8f8f8;
+}
+#mock-map p{font-family:'Oswald',sans-serif;font-size:11px;color:#888;letter-spacing:1px;}
+.demo-section{display:flex;flex-direction:column;align-items:center;gap:6px;width:260px;}
+.demo-label{font-family:'Oswald',sans-serif;font-size:9px;color:#aaa;letter-spacing:2px;text-align:center;}
+.demo-row{display:flex;gap:6px;width:100%;}
+.demo-btn{
+  flex:1;padding:8px 0;background:#111;color:#fff;border:none;
+  font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
+  cursor:pointer;border-radius:2px;display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.demo-btn.outline{background:#fff;color:#111;border:1px solid #ddd;}
+.demo-btn:disabled{background:#eee;color:#bbb;cursor:not-allowed;}
+
+/* ─── TRAVEL BANNER ─── */
+#travel-banner{
+  position:fixed;
+  bottom:74px; /* bottombar height */
+  left:0;right:0;
+  height:44px;
+  background:#111;
+  border-top:2px solid #C9A84C;
+  display:flex;align-items:center;
+  padding:0 12px;gap:0;
+  z-index:500;
+  transform:translateY(44px);
+  transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  overflow:hidden;
+}
+#travel-banner.on{transform:translateY(0);}
+
+/* shimmer line at top */
+#travel-banner::before{
+  content:'';position:absolute;top:0;left:-100%;width:60%;height:2px;
+  background:linear-gradient(90deg,transparent,#C9A84C,transparent);
+  animation:tb-shimmer 3s linear infinite;
+}
+@keyframes tb-shimmer{0%{left:-60%}100%{left:150%}}
+
+/* vehicle icon */
+.tb-vehicle{
+  width:28px;height:28px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;margin-right:8px;
+}
+
+/* route */
+.tb-route{
+  flex:1;min-width:0;
+  display:flex;align-items:center;gap:0;overflow:hidden;
+}
+.tb-city{
+  font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;
+  color:#fff;letter-spacing:1px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:72px;
+}
+.tb-arrow{
+  font-family:'Oswald',sans-serif;font-size:11px;color:#C9A84C;
+  padding:0 5px;flex-shrink:0;
+}
+
+/* divider */
+.tb-div{width:1px;height:22px;background:rgba(255,255,255,0.12);margin:0 10px;flex-shrink:0;}
+
+/* timer */
+.tb-timer-wrap{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.tb-timer-ico{font-size:11px;color:#C9A84C;}
+.tb-timer{
+  font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;
+  color:#fff;letter-spacing:2px;font-variant-numeric:tabular-nums;
+  min-width:50px;
+}
+.tb-timer.urgent{color:#ef4444;}
+
+/* shield badge */
+.tb-shield{
+  display:flex;align-items:center;gap:3px;margin:0 8px;flex-shrink:0;
+  background:rgba(42,122,58,0.25);border:1px solid #2a7a3a;
+  border-radius:2px;padding:2px 6px;
+}
+.tb-shield span{font-family:'Oswald',sans-serif;font-size:8px;font-weight:700;color:#4ade80;letter-spacing:1px;}
+.tb-shield::before{content:'🛡️';font-size:9px;}
+
+/* cancel btn */
+.tb-cancel{
+  flex-shrink:0;height:28px;padding:0 10px;
+  background:rgba(198,40,40,0.15);border:1px solid rgba(198,40,40,0.4);
+  color:#e57373;border-radius:2px;
+  font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:1px;cursor:pointer;display:flex;align-items:center;gap:4px;
+}
+
+/* ─── CANCEL CONFIRM SHEET ─── */
+#cancel-sheet{
+  display:none;position:fixed;inset:0;z-index:600;
+  background:rgba(0,0,0,0.6);
+  align-items:flex-end;justify-content:center;
+}
+#cancel-sheet.on{display:flex;}
+.cs-inner{
+  background:#fff;width:100%;
+  border-radius:12px 12px 0 0;
+  padding:16px 16px 32px;
+  animation:cs-up 0.2s ease;
+}
+@keyframes cs-up{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.cs-handle{width:36px;height:3px;background:#e0e0e0;border-radius:2px;margin:0 auto 14px;}
+.cs-title{font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;color:#111;letter-spacing:1.5px;margin-bottom:4px;}
+.cs-route{font-family:'Oswald',sans-serif;font-size:11px;color:#888;letter-spacing:1px;margin-bottom:14px;}
+.cs-penalty-card{
+  background:#fff5f5;border:1px solid #fecaca;border-radius:2px;
+  padding:10px 12px;margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;
+}
+.cs-penalty-ico{font-size:20px;flex-shrink:0;}
+.cs-penalty-text .pt-title{font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:#c62828;letter-spacing:1px;}
+.cs-penalty-text .pt-sub{font-family:'Oswald',sans-serif;font-size:10px;color:#888;margin-top:2px;}
+.cs-penalty-text .pt-sub strong{color:#c62828;}
+.cs-btns{display:flex;gap:8px;}
+.btn-cs-keep{
+  flex:1;height:44px;background:#111;color:#fff;border:none;
+  font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:1.5px;cursor:pointer;border-radius:2px;
+}
+.btn-cs-cancel{
+  flex:1;height:44px;background:#fff;color:#c62828;
+  border:1px solid #fecaca;
+  font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:1.5px;cursor:pointer;border-radius:2px;
+}
+
+/* ─── ARRIVAL TOAST ─── */
+#arrival-toast{
+  position:fixed;bottom:130px;left:50%;transform:translateX(-50%);
+  background:#111;color:#fff;padding:10px 18px;border-radius:2px;
+  font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1px;z-index:700;opacity:0;
+  transition:opacity 0.2s;pointer-events:none;white-space:nowrap;
+  border-left:3px solid #C9A84C;
+}
+#arrival-toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span>GANGSTER</span>
+  <span style="color:#888;font-size:9px">|</span>
+  <span style="color:#2a7a3a">♥ 85</span>
+  <span style="color:#C9A84C">💰 2.45M</span>
+  <span>🔫 9,200</span>
+  <span style="margin-left:auto;font-size:9px;color:#888">ISTANBUL</span>
+</div>
+<div id="topnav">
+  <span>👤</span><span>🗺</span><span>📦</span><span>✈️</span><span>🎰</span><span>🏦</span><span>🛒</span>
+</div>
+
+<div id="main">
+  <div id="mock-map">
+    <p>MAP SCREEN</p>
+
+    <div class="demo-section">
+      <div class="demo-label">DEMO SEYAHATLER</div>
+      <div class="demo-row">
+        <button class="demo-btn" onclick="startTravel('train','Istanbul','Ankara',20,150000)">🚂 TREN</button>
+        <button class="demo-btn" onclick="startTravel('ship','Istanbul','Napoli',35,420000)">⛵ GEMİ</button>
+        <button class="demo-btn" onclick="startTravel('plane','Istanbul','New York',15,890000)">✈️ UÇAK</button>
+      </div>
+      <div class="demo-row">
+        <button class="demo-btn outline" id="btn-demo-urgent" onclick="startTravel('train','Istanbul','Izmir',8,80000)" disabled>⚡ KISA (8s)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="bottombar">
+  <span>OFFENDER</span><span>INSIDE JOB</span>
+  <span style="font-size:32px">⚜</span>
+  <span>MAP</span><span>BUSTOUT</span><span>KAÇAKCILIK</span>
+</div>
+
+<!-- ─── TRAVEL BANNER ─── -->
+<div id="travel-banner">
+  <div class="tb-vehicle" id="tb-vehicle">🚂</div>
+  <div class="tb-route">
+    <span class="tb-city" id="tb-from">ISTANBUL</span>
+    <span class="tb-arrow">→</span>
+    <span class="tb-city" id="tb-to">ANKARA</span>
+  </div>
+  <div class="tb-div"></div>
+  <div class="tb-timer-wrap">
+    <span class="tb-timer-ico">⏱</span>
+    <span class="tb-timer" id="tb-timer">00:00</span>
+  </div>
+  <div class="tb-shield"><span>SAFE</span></div>
+  <div class="tb-div"></div>
+  <button class="tb-cancel" onclick="openCancelSheet()">✕ İPTAL</button>
+</div>
+
+<!-- ─── CANCEL SHEET ─── -->
+<div id="cancel-sheet" onclick="if(event.target===this)closeCancelSheet()">
+  <div class="cs-inner">
+    <div class="cs-handle"></div>
+    <div class="cs-title">CANCEL TRAVEL?</div>
+    <div class="cs-route" id="cs-route-text">🚂 ISTANBUL → ANKARA</div>
+    <div class="cs-penalty-card">
+      <div class="cs-penalty-ico">💸</div>
+      <div class="cs-penalty-text">
+        <div class="pt-title">50% CANCELLATION FEE</div>
+        <div class="pt-sub">Ticket cost: <strong id="cs-ticket-cost">$150,000</strong> → Penalty: <strong id="cs-penalty-amt">$75,000</strong></div>
+      </div>
+    </div>
+    <div class="cs-btns">
+      <button class="btn-cs-keep" onclick="closeCancelSheet()">KEEP TRAVELING</button>
+      <button class="btn-cs-cancel" onclick="confirmCancel()">PAY & CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div id="arrival-toast"></div>
+
+<script>
+var VEHICLE_ICO = { train:'🚂', ship:'⛵', plane:'✈️' };
+
+var TB = {
+  active:       false,
+  vehicle:      'train',
+  from:         '',
+  to:           '',
+  remainingSecs:0,
+  totalSecs:    0,
+  ticketCost:   0,
+  timerInt:     null,
+};
+
+function startTravel(vehicle, from, to, secs, cost) {
+  if (TB.active) { tbToast('Zaten seyahatteyken yeni seyahat başlatılamaz'); return; }
+
+  TB.active        = true;
+  TB.vehicle       = vehicle;
+  TB.from          = from;
+  TB.to            = to;
+  TB.remainingSecs = secs;
+  TB.totalSecs     = secs;
+  TB.ticketCost    = cost;
+
+  // Disable demo buttons while traveling
+  document.querySelectorAll('.demo-btn').forEach(function(b){ b.disabled = true; });
+
+  // Update banner
+  document.getElementById('tb-vehicle').textContent = VEHICLE_ICO[vehicle] || '🚂';
+  document.getElementById('tb-from').textContent    = from.toUpperCase();
+  document.getElementById('tb-to').textContent      = to.toUpperCase();
+
+  tbRenderTimer();
+  document.getElementById('travel-banner').classList.add('on');
+
+  clearInterval(TB.timerInt);
+  TB.timerInt = setInterval(function() {
+    TB.remainingSecs--;
+    tbRenderTimer();
+    if (TB.remainingSecs <= 0) {
+      clearInterval(TB.timerInt);
+      tbArrive();
+    }
+  }, 1000);
+}
+
+function tbRenderTimer() {
+  var s   = TB.remainingSecs;
+  var m   = Math.floor(s / 60);
+  var sec = s % 60;
+  var str = (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+  var el  = document.getElementById('tb-timer');
+  el.textContent = str;
+  el.className   = 'tb-timer' + (s <= 10 ? ' urgent' : '');
+}
+
+function tbArrive() {
+  TB.active = false;
+  document.getElementById('travel-banner').classList.remove('on');
+  document.querySelectorAll('.demo-btn').forEach(function(b){ b.disabled = false; });
+  tbToast('✈ ARRIVED IN ' + TB.to.toUpperCase() + ' · +3 XP');
+}
+
+// Cancel flow
+function openCancelSheet() {
+  var ico     = VEHICLE_ICO[TB.vehicle] || '🚂';
+  var penalty = Math.round(TB.ticketCost * 0.5);
+  document.getElementById('cs-route-text').textContent = ico + ' ' + TB.from.toUpperCase() + ' → ' + TB.to.toUpperCase();
+  document.getElementById('cs-ticket-cost').textContent = '$' + TB.ticketCost.toLocaleString();
+  document.getElementById('cs-penalty-amt').textContent  = '$' + penalty.toLocaleString();
+  document.getElementById('cancel-sheet').classList.add('on');
+}
+function closeCancelSheet() {
+  document.getElementById('cancel-sheet').classList.remove('on');
+}
+function confirmCancel() {
+  var penalty = Math.round(TB.ticketCost * 0.5);
+  closeCancelSheet();
+  clearInterval(TB.timerInt);
+  TB.active = false;
+  document.getElementById('travel-banner').classList.remove('on');
+  document.querySelectorAll('.demo-btn').forEach(function(b){ b.disabled = false; });
+  tbToast('❌ TRAVEL CANCELLED · -$' + penalty.toLocaleString() + ' PENALTY');
+}
+
+function tbToast(msg) {
+  var t = document.getElementById('arrival-toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._r); t._r = setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>VILLA — UNDERGROUND</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #ffffff;
+  --black: #111111;
+  --grey-light: #e0e0e0;
+  --grey-mid: #aaaaaa;
+  --gold: #C9A84C;
+  --green: #22c55e;
+  --font:'Oswald',sans-serif;
+}
+body{background:#888;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.open-btn{padding:12px 28px;background:#111;color:#fff;border:none;font-family:'Oswald',sans-serif;font-weight:700;font-size:16px;letter-spacing:2px;cursor:pointer;}
+#ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:10000;}
+#pop{display:none;position:fixed;bottom:116px;left:50%;transform:translateX(-50%);width:320px;height:520px;background:#fff;z-index:10001;flex-direction:column;overflow:hidden;border:3px double #111;border-bottom:none;}
+#pop.open{display:flex;animation:su .25s cubic-bezier(.4,0,.2,1);}
+@keyframes su{from{transform:translateX(-50%) translateY(640px);}to{transform:translateX(-50%) translateY(0);}}
+
+/* TOP BAR */
+.top-bar {
+  height: 44px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--grey-light);
+  flex-shrink: 0;
+  gap: 8px;
+}
+.top-bar-title { font-size: 14px; letter-spacing: 2px; color: var(--black); flex:1; }
+.top-money {
+  font-size: 12px;
+  color: var(--green);
+  letter-spacing: 1px;
+}
+
+/* MAIN SCROLL */
+.villa-screen {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+}
+
+/* ── TOP STATS ROW ── */
+.stats-row {
+  display: flex;
+  gap: 6px;
+}
+.stat-card {
+  flex: 1;
+  background: #fff;
+  border: 1px solid var(--grey-light);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat-card.gold-card { border-color: #C9A84C66; background: #fffdf5; }
+.sc-label { font-size: 8px; color: var(--gold); letter-spacing: 1px; }
+.sc-value { font-size: 18.5px; color: var(--black); letter-spacing: 1px; line-height: 1; }
+.sc-value.green { color: var(--green); }
+.sc-value.gold  { color: var(--gold); }
+.sc-sub { font-size: 8px; color: var(--gold); letter-spacing: 0.5px; margin-top: 1px; }
+
+/* Progress bar */
+.prog-bg {
+  height: 3px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.prog-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.prog-fill.gold { background: var(--gold); }
+
+/* 40 Villa completion banner */
+.complete-banner {
+  background: #fffdf0;
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  display: none;
+}
+.complete-banner.show { display: flex; }
+.cb-ico { font-size: 24px; flex-shrink:0; }
+.cb-text { flex:1; }
+.cb-title { font-size: 11.5px; color: var(--gold); letter-spacing: 1.5px; }
+.cb-sub   { font-size: 8px;   color: var(--gold); letter-spacing: 0.5px; margin-top: 2px; }
+
+/* Active Villa Banner */
+.active-banner {
+  background: #fff;
+  border: 1px solid var(--grey-light);
+  border-left: 3px solid var(--gold);
+  border-radius: 10px;
+  padding: 9px 12px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+.active-banner.show { display: flex; }
+.ab-info { flex:1; }
+.ab-label { font-size: 8px; color: var(--gold); letter-spacing: 1px; }
+.ab-city  { font-size: 13.5px; color: var(--black); letter-spacing: 1px; }
+.ab-bonus { font-size: 8px; color: var(--gold); letter-spacing: 0.5px; margin-top: 2px; }
+.ab-leave {
+  background: none;
+  border: 1px solid var(--grey-light);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-family: var(--font);
+  font-size: 9px;
+  color: #888;
+  cursor: pointer;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+/* Country Group */
+.country-group { display: flex; flex-direction: column; gap: 5px; }
+
+.country-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 2px;
+}
+.ch-flag { font-size: 14px; }
+.ch-name { font-size: 9px; color: var(--gold); letter-spacing: 1.5px; flex:1; }
+.ch-tier {
+  font-size: 7px;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: #f5f5f5;
+  color: #888;
+}
+.ch-tier.t1 { background: #f0fdf4; color: var(--green); }
+.ch-tier.t2 { background: #eff6ff; color: #3b82f6; }
+.ch-tier.t3 { background: #fffbeb; color: var(--gold); }
+
+/* Villa Card */
+.villa-card {
+  background: #fff;
+  border: 1px solid var(--grey-light);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+.villa-card.owned   { border-color: #22c55e44; }
+.villa-card.active  { border-color: var(--gold); background: #fffdf5; }
+.villa-card.locked  { opacity: 0.5; }
+.villa-card.family-city { border-left: 3px solid var(--black); }
+
+.vc-ico {
+  width: 38px; height: 38px;
+  border-radius: 8px;
+  background: #f9f9f9;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.villa-card.active .vc-ico { background: #fff8e6; }
+.villa-card.locked .vc-ico { filter: grayscale(1); }
+
+.vc-info { flex:1; min-width:0; }
+.vc-name { font-size: 12.5px; color: var(--black); letter-spacing: 1px; }
+.vc-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+.vc-tag {
+  font-size: 8px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+.tag-family { background: #f5f5f5; color: var(--gold); }
+.tag-owned  { background: #f0fdf4; color: var(--green); }
+.tag-active { background: #fff8e6; color: var(--gold); border: 1px solid #C9A84C55; }
+.tag-bonus  { background: #fff8e6; color: var(--gold); }
+.tag-lock   { background: #f5f5f5; color: #aaa; }
+
+.vc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.vc-price { font-size: 12px; color: var(--gold); letter-spacing: 0.5px; }
+.vc-price.free { color: var(--green); }
+
+.vc-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: var(--font);
+  font-size: 9px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-buy    { background: var(--black); color: #fff; }
+.btn-enter  { background: #111; color: #fff; }
+.btn-leave  { background: none; border: 1px solid var(--grey-light); color: #888; }
+.btn-owned  { background: #f0fdf4; color: var(--green); border: 1px solid #22c55e44; cursor: default; }
+.btn-locked { background: #f5f5f5; color: #bbb; cursor: default; }
+
+/* CONFIRM POPUP */
+.overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.confirm-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 18px;
+  width: 285px;
+  animation: pop .15s ease;
+}
+@keyframes pop {
+  from { opacity:0; transform:scale(.96); }
+  to   { opacity:1; transform:scale(1); }
+}
+.cb-title-c { font-size: 13px; letter-spacing: 2px; color: var(--black); margin-bottom: 4px; }
+.cb-sub-c   { font-size: 8px; color: var(--grey-mid); letter-spacing: 0.5px; margin-bottom: 12px; line-height: 1.5; }
+.cb-amount  { font-size: 22px; color: var(--black); letter-spacing: 1px; margin-bottom: 6px; }
+.cb-amount span { color: var(--green); }
+.cb-balance { font-size: 8px; color: var(--grey-mid); letter-spacing: 0.5px; margin-bottom: 14px; }
+.cb-balance span { color: var(--black); }
+.cb-btns { display: flex; gap: 8px; }
+.cb-yes {
+  flex:1; background: var(--black); border: none;
+  border-radius: 8px; padding: 11px;
+  font-family: var(--font); font-size: 10px; color: #fff; cursor: pointer; letter-spacing: 1px;
+}
+.cb-no {
+  flex:1; background: none; border: 1px solid var(--grey-light);
+  border-radius: 8px; padding: 11px;
+  font-family: var(--font); font-size: 10px; color: #888; cursor: pointer; letter-spacing: 1px;
+}
+
+/* Toast */
+.toast {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: #111;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 200;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { opacity:1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<button class="open-btn" onclick="openPop()">VİLLA AÇ</button>
+<div id="ov" onclick="closePop()"></div>
+
+<div id="pop">
+
+  <!-- HEADER -->
+  <div style="height:64px;flex-shrink:0;background:#fff;border-bottom:3px double #111;display:flex;align-items:center;padding:0 10px;position:relative;">
+    <img src="https://mericaltinors1983-max.github.io/hustler/villas.png"
+         style="width:35px;height:35px;object-fit:contain;flex-shrink:0;"
+         onerror="this.style.display='none'">
+    <div style="position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+      <img src="https://mericaltinors1983-max.github.io/hustler/lafamilia-2.png"
+           style="height:54px;max-width:220px;object-fit:contain;"
+           onerror="this.style.display='none'">
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:2px;">
+      <button style="background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;">
+        <img src="https://mericaltinors1983-max.github.io/hustler/icon_info.png"
+             style="width:22px;height:22px;object-fit:contain;"
+             onerror="this.style.display='none'">
+      </button>
+      <button style="background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;" onclick="closePop()">
+        <img src="https://mericaltinors1983-max.github.io/hustler/close_icon.png"
+             style="width:22px;height:22px;object-fit:contain;"
+             onerror="this.style.display='none'">
+      </button>
+    </div>
+  </div>
+
+  <!-- VILLA SCREEN -->
+  <div class="villa-screen" id="villa-screen"></div>
+
+  <!-- CONFIRM OVERLAY -->
+  <div class="overlay" id="confirm-overlay" onclick="if(event.target===this)closeConfirm()">
+    <div class="confirm-box">
+      <div class="cb-title-c" id="c-title">VİLLA SATIN AL</div>
+      <div class="cb-sub-c"   id="c-sub">—</div>
+      <div class="cb-amount"><span id="c-price">$0</span></div>
+      <div class="cb-balance">BAKİYE: <span id="c-balance">$0</span></div>
+      <div class="cb-btns">
+        <button class="cb-yes" onclick="confirmBuy()">SATIN AL</button>
+        <button class="cb-no"  onclick="closeConfirm()">VAZGEÇ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALT KAPAT BARI -->
+  <div style="flex-shrink:0;border-top:3px double #111;">
+    <button onclick="closePop()" style="width:100%;padding:8px;background:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <img src="https://mericaltinors1983-max.github.io/hustler/close_icon.png"
+           style="width:50px;height:50px;object-fit:contain;"
+           onerror="this.style.display='none'">
+    </button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+// ────────────────────────────────────────────────────────
+// DATA
+// ────────────────────────────────────────────────────────
+
+var PLAYER = {
+  money: 12500000,
+  rank: 7,
+  city: 'istanbul',
+  familyCity: 'istanbul',
+  familyCountry: 'turkiye',
+  family: 'KARA AİLE'
+};
+
+// Aile ülkesindeki villaları %70 ucuza alırsın (fiyat × 0.30)
+function getFinalPrice(g, ci) {
+  var base = g.prices[ci] || g.prices[g.prices.length - 1];
+  if (g.gid === PLAYER.familyCountry || g.gid === 'family') {
+    return Math.round(base * 0.30);
+  }
+  return base;
+}
+
+function isFamilyCountry(g) {
+  return g.gid === PLAYER.familyCountry || g.gid === 'family';
+}
+
+// Unlock sırası: family city → meksika → kolombiya → brezilya
+// → turkiye(kalan) → almanya → italya → rusya → cin → japonya → abd
+//
+// Tier fiyatları (1. şehir base, her sonraki +%50):
+// T1 (Meksika/Kolombiya/Brezilya): 1M, 1.5M, 2M, 2.5M
+// T2 (Türkiye/Almanya/İtalya/Rusya): 2M, 3M, 4M, 5M
+// T3 (Çin/Japonya/ABD): 5M, 7.5M, 10M, 12.5M
+// Family city = o ülkenin tier fiyatı (ilk şehir)
+
+var VILLA_GROUPS = [
+  // 1 — AİLE ŞEHRİ (her zaman ilk)
+  {
+    gid: 'family',
+    name: 'AİLE ŞEHRİ',
+    flag: '🏴',
+    tier: 0,
+    prices: [2000000],
+    cities: [
+      {id:'istanbul', name:'İSTANBUL', flag:'🇹🇷', country:'TÜRKİYE'}
+    ]
+  },
+  // 2 — MEKSİKA (T1)
+  {
+    gid: 'meksika',
+    name: 'MEKSİKA',
+    flag: '🇲🇽',
+    tier: 1,
+    prices: [1000000, 1500000, 2000000, 2500000],
+    cities: [
+      {id:'mexicocity',  name:'MEXİCO CİTY',  flag:'🇲🇽', country:'MEKSİKA'},
+      {id:'guadalajara', name:'GUADALAJARA',   flag:'🇲🇽', country:'MEKSİKA'},
+      {id:'monterrey',   name:'MONTERREY',     flag:'🇲🇽', country:'MEKSİKA'},
+      {id:'tijuana',     name:'TİJUANA',       flag:'🇲🇽', country:'MEKSİKA'},
+    ]
+  },
+  // 3 — KOLOMBİYA (T1)
+  {
+    gid: 'kolombiya',
+    name: 'KOLOMBİYA',
+    flag: '🇨🇴',
+    tier: 1,
+    prices: [1000000, 1500000, 2000000, 2500000],
+    cities: [
+      {id:'medellin',  name:'MEDELLİN',  flag:'🇨🇴', country:'KOLOMBİYA'},
+      {id:'bogota',    name:'BOGOTA',    flag:'🇨🇴', country:'KOLOMBİYA'},
+      {id:'cali',      name:'CALİ',      flag:'🇨🇴', country:'KOLOMBİYA'},
+      {id:'cartagena', name:'CARTAGENA', flag:'🇨🇴', country:'KOLOMBİYA'},
+    ]
+  },
+  // 4 — BREZİLYA (T1)
+  {
+    gid: 'brezilya',
+    name: 'BREZİLYA',
+    flag: '🇧🇷',
+    tier: 1,
+    prices: [1000000, 1500000, 2000000, 2500000],
+    cities: [
+      {id:'rio',       name:'RİO DE JANEİRO', flag:'🇧🇷', country:'BREZİLYA'},
+      {id:'saopaulo',  name:'SÃO PAULO',      flag:'🇧🇷', country:'BREZİLYA'},
+      {id:'salvador',  name:'SALVADOR',       flag:'🇧🇷', country:'BREZİLYA'},
+      {id:'fortaleza', name:'FORTALEZA',      flag:'🇧🇷', country:'BREZİLYA'},
+    ]
+  },
+  // 5 — TÜRKİYE (T2 — kalan 3 şehir, istanbul aile grubunda)
+  {
+    gid: 'turkiye',
+    name: 'TÜRKİYE',
+    flag: '🇹🇷',
+    tier: 2,
+    prices: [3000000, 4000000, 5000000],
+    cities: [
+      {id:'izmir',      name:'İZMİR',      flag:'🇹🇷', country:'TÜRKİYE'},
+      {id:'diyarbakir', name:'DİYARBAKIR', flag:'🇹🇷', country:'TÜRKİYE'},
+      {id:'trabzon',    name:'TRABZON',    flag:'🇹🇷', country:'TÜRKİYE'},
+    ]
+  },
+  // 6 — ALMANYA (T2)
+  {
+    gid: 'almanya',
+    name: 'ALMANYA',
+    flag: '🇩🇪',
+    tier: 2,
+    prices: [2000000, 3000000, 4000000, 5000000],
+    cities: [
+      {id:'berlin',    name:'BERLİN',    flag:'🇩🇪', country:'ALMANYA'},
+      {id:'hamburg',   name:'HAMBURG',   flag:'🇩🇪', country:'ALMANYA'},
+      {id:'munih',     name:'MÜNİH',     flag:'🇩🇪', country:'ALMANYA'},
+      {id:'frankfurt', name:'FRANKFURT', flag:'🇩🇪', country:'ALMANYA'},
+    ]
+  },
+  // 7 — İTALYA (T2)
+  {
+    gid: 'italya',
+    name: 'İTALYA',
+    flag: '🇮🇹',
+    tier: 2,
+    prices: [2000000, 3000000, 4000000, 5000000],
+    cities: [
+      {id:'napoli',  name:'NAPOLİ',  flag:'🇮🇹', country:'İTALYA'},
+      {id:'sicilya', name:'SİCİLYA', flag:'🇮🇹', country:'İTALYA'},
+      {id:'milano',  name:'MİLANO',  flag:'🇮🇹', country:'İTALYA'},
+      {id:'roma',    name:'ROMA',    flag:'🇮🇹', country:'İTALYA'},
+    ]
+  },
+  // 8 — RUSYA (T2)
+  {
+    gid: 'rusya',
+    name: 'RUSYA',
+    flag: '🇷🇺',
+    tier: 2,
+    prices: [2000000, 3000000, 4000000, 5000000],
+    cities: [
+      {id:'moskova',     name:'MOSKOVA',        flag:'🇷🇺', country:'RUSYA'},
+      {id:'stpetersburg',name:'ST. PETERSBURG',  flag:'🇷🇺', country:'RUSYA'},
+      {id:'kazan',       name:'KAZAN',           flag:'🇷🇺', country:'RUSYA'},
+      {id:'vladivostok', name:'VLADİVOSTOK',    flag:'🇷🇺', country:'RUSYA'},
+    ]
+  },
+  // 9 — ÇİN (T3)
+  {
+    gid: 'cin',
+    name: 'ÇİN',
+    flag: '🇨🇳',
+    tier: 3,
+    prices: [5000000, 5000000, 5000000, 5000000],
+    cities: [
+      {id:'sanghay',  name:'ŞANGHAY',  flag:'🇨🇳', country:'ÇİN'},
+      {id:'hongkong', name:'HONG KONG',flag:'🇨🇳', country:'ÇİN'},
+      {id:'pekin',    name:'PEKİN',    flag:'🇨🇳', country:'ÇİN'},
+      {id:'shenzhen', name:'SHENZHEN', flag:'🇨🇳', country:'ÇİN'},
+    ]
+  },
+  // 10 — JAPONYA (T3)
+  {
+    gid: 'japonya',
+    name: 'JAPONYA',
+    flag: '🇯🇵',
+    tier: 3,
+    prices: [5000000, 5000000, 5000000, 5000000],
+    cities: [
+      {id:'tokyo',    name:'TOKYO',    flag:'🇯🇵', country:'JAPONYA'},
+      {id:'osaka',    name:'OSAKA',    flag:'🇯🇵', country:'JAPONYA'},
+      {id:'kyoto',    name:'KYOTO',    flag:'🇯🇵', country:'JAPONYA'},
+      {id:'yokohama', name:'YOKOHAMA', flag:'🇯🇵', country:'JAPONYA'},
+    ]
+  },
+  // 11 — ABD (T3 — son)
+  {
+    gid: 'abd',
+    name: 'ABD',
+    flag: '🇺🇸',
+    tier: 3,
+    prices: [5000000, 5000000, 5000000, 5000000],
+    cities: [
+      {id:'newyork',  name:'NEW YORK',  flag:'🇺🇸', country:'ABD'},
+      {id:'chicago',  name:'CHİCAGO',   flag:'🇺🇸', country:'ABD'},
+      {id:'lasvegas', name:'LAS VEGAS', flag:'🇺🇸', country:'ABD'},
+      {id:'miami',    name:'MİAMİ',     flag:'🇺🇸', country:'ABD'},
+    ]
+  },
+];
+
+// Oyuncu villa state
+var PLAYER_DATA = {
+  villas: {
+    // demo için 2 tane owned başlat
+    istanbul:   true,
+    mexicocity: true,
+  },
+  activeVilla: null,
+  aileHQVilla: false  // Aile HQ villanın olduğu şehirde oturuyorsa +%3 bonus
+};
+
+// ────────────────────────────────────────────────────────
+// HESAPLAMALAR
+// ────────────────────────────────────────────────────────
+
+function ownedList() {
+  return Object.keys(PLAYER_DATA.villas).filter(function(k){ return PLAYER_DATA.villas[k]; });
+}
+
+function ownedCount() { return ownedList().length; }
+
+// Bir grup için kaçıncı index'e kadar satın alınmış
+function groupBoughtCount(g) {
+  return g.cities.filter(function(c){ return PLAYER_DATA.villas[c.id]; }).length;
+}
+
+// Grup kilidi açık mı? (önceki grubun en az 1 şehri satın alınmış olmalı)
+function isGroupUnlocked(groupIdx) {
+  if (groupIdx === 0) return true; // family her zaman açık
+  var prevGroup = VILLA_GROUPS[groupIdx - 1];
+  return groupBoughtCount(prevGroup) >= 1;
+}
+
+// Bir şehir satın alınabilir mi?
+function isCityAvailable(g, cityIdx) {
+  if (!isGroupUnlocked(VILLA_GROUPS.indexOf(g))) return false;
+  if (PLAYER_DATA.villas[g.cities[cityIdx].id]) return true; // zaten owned
+  // O şehirden önceki tüm şehirler alınmış olmalı
+  for (var i = 0; i < cityIdx; i++) {
+    if (!PLAYER_DATA.villas[g.cities[i].id]) return false;
+  }
+  return true;
+}
+
+function calcDefense() {
+  var owned = ownedCount();
+  var perVilla = +(owned * 0.3).toFixed(1);
+  var active = PLAYER_DATA.activeVilla ? 3 : 0;
+  var hq = PLAYER_DATA.aileHQVilla ? 3 : 0;
+  // MAX: 40×0.3%=+12% + aktif +3% + aile HQ +3% = +%18
+  return {
+    owned: owned,
+    perVilla: perVilla,
+    active: active,
+    hq: hq,
+    total: +(perVilla + active + hq).toFixed(1)
+  };
+}
+
+// ────────────────────────────────────────────────────────
+// FORMAT
+// ────────────────────────────────────────────────────────
+
+function fmt(n) {
+  if (n >= 1000000) return '$' + (n/1000000).toFixed(1).replace(/\.0$/,'') + 'M';
+  if (n >= 1000)    return '$' + Math.round(n/1000) + 'K';
+  return '$' + n;
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+// ────────────────────────────────────────────────────────
+// RENDER
+// ────────────────────────────────────────────────────────
+
+function renderAll() {
+  var screen = document.getElementById('villa-screen');
+  var def = calcDefense();
+  var owned = ownedCount();
+
+  var html = '';
+
+  // ── Stats Row ──
+  var pct = Math.min(100, (owned / 40) * 100);
+  html += '<div class="stats-row">';
+
+  // Villa count card
+  html += '<div class="stat-card">'
+    + '<div class="sc-label">OWNED</div>'
+    + '<div class="sc-value">' + owned + '<span style="font-size:10px;color:#aaa"> / 40</span></div>'
+    + '<div class="prog-bg"><div class="prog-fill" style="width:' + pct + '%"></div></div>'
+    + '</div>';
+
+  // Defense card
+  html += '<div class="stat-card ' + (owned >= 40 ? 'gold-card' : '') + '">'
+    + '<div class="sc-label">VILLA DEFENSE</div>'
+    + '<div class="sc-value ' + (owned >= 40 ? 'gold' : 'green') + '">+' + def.total + '%</div>'
+    + '<div class="sc-sub">'
+      + owned + '×0.3%=' + def.perVilla + '%'
+      + (def.active ? ' + AKTİF+3%' : '')
+      + (def.hq     ? ' + AİLE HQ+3%' : '')
+    + '</div>'
+    + '</div>';
+
+  html += '</div>'; // /stats-row
+
+  // ── 40 villa max banner ──
+  if (owned >= 40) {
+    html += '<div class="complete-banner show">'
+      + '<div class="cb-ico">👑</div>'
+      + '<div class="cb-text">'
+      + '<div class="cb-title">TÜM VİLLALAR TAMAMLANDI</div>'
+      + '<div class="cb-sub">MAX +%12 SAHİPLİK BONUSU AKTİF — TOPLAM +' + def.total + '% DEFENSE</div>'
+      + '</div></div>';
+  }
+
+  // ── Active Villa Banner ──
+  if (PLAYER_DATA.activeVilla) {
+    var ac = cityById(PLAYER_DATA.activeVilla);
+    html += '<div class="active-banner show">'
+      + '<div class="ab-info">'
+      + '<div class="ab-label">✦ AKTİF VİLLA</div>'
+      + '<div class="ab-city">' + (ac ? ac.flag + ' ' + ac.name : '—') + '</div>'
+      + '<div class="ab-bonus">+3% DEFENSE — TİCARET/SUÇ KAPALI</div>'
+      + '</div>'
+      + '<button class="ab-leave" onclick="leaveVilla()">ÇIKAR</button>'
+      + '</div>';
+  }
+
+  // ── Country Groups ──
+  VILLA_GROUPS.forEach(function(g, gi) {
+    var unlocked = isGroupUnlocked(gi);
+    var boughtInGroup = groupBoughtCount(g);
+    var tierLabel = ['', 'T1', 'T2', 'T3'][g.tier] || '';
+    var tierClass = ['', 't1', 't2', 't3'][g.tier] || '';
+
+    html += '<div class="country-group">';
+
+    // Header
+    html += '<div class="country-header">'
+      + '<span class="ch-flag">' + g.flag + '</span>'
+      + '<span class="ch-name">' + (g.gid === 'family' ? 'AİLE ŞEHRİ — ' + PLAYER.family : g.name) + '</span>'
+      + (tierLabel ? '<span class="ch-tier ' + tierClass + '">' + tierLabel + '</span>' : '')
+      + (boughtInGroup > 0 ? '<span style="font-size:8px;color:var(--green);letter-spacing:0.5px;">' + boughtInGroup + '/' + g.cities.length + ' OWNED</span>' : '')
+      + '</div>';
+
+    // Cities
+    g.cities.forEach(function(c, ci) {
+      var isOwned   = !!PLAYER_DATA.villas[c.id];
+      var isActive  = PLAYER_DATA.activeVilla === c.id;
+      var available = isCityAvailable(g, ci);
+      var isFamily     = c.id === PLAYER.familyCity;
+      var isFamCtry    = isFamilyCountry(g);
+      var basePrice    = g.prices[ci] || g.prices[g.prices.length-1];
+      var price        = getFinalPrice(g, ci);
+
+      var cardClass = 'villa-card';
+      if (isActive)    cardClass += ' active';
+      else if (isOwned) cardClass += ' owned';
+      else if (!available) cardClass += ' locked';
+      if (isFamily)    cardClass += ' family-city';
+
+      html += '<div class="' + cardClass + '">';
+      html += '<div class="vc-ico">' + (isActive ? '✦' : isOwned ? '🏠' : available ? '🏚' : '🔒') + '</div>';
+
+      // Info
+      html += '<div class="vc-info">'
+        + '<div class="vc-name">' + c.flag + ' ' + c.name + '</div>'
+        + '<div class="vc-tags">';
+
+      if (isFamily)   html += '<span class="vc-tag tag-family">AİLE ŞEHRİ</span>';
+      if (isOwned)    html += '<span class="vc-tag tag-owned">OWNED</span>';
+      if (isActive)   html += '<span class="vc-tag tag-active">✦ AKTİF +3%</span>';
+      if (isOwned)    html += '<span class="vc-tag tag-bonus">+0.3% DEF</span>';
+      if (isFamCtry && !isOwned && available) html += '<span class="vc-tag" style="background:#fff0f0;color:#e53935;">AİLE -%70</span>';
+      if (!available && !isOwned) html += '<span class="vc-tag tag-lock">🔒 KİLİTLİ</span>';
+
+      html += '</div></div>';
+
+      // Right side
+      html += '<div class="vc-right">';
+      if (!isOwned) {
+        if (available && isFamCtry) {
+          html += '<div style="text-align:right;">'
+            + '<div style="font-size:9px;color:#bbb;text-decoration:line-through;letter-spacing:0.5px;">' + fmt(basePrice) + '</div>'
+            + '<div style="font-size:12px;color:#e53935;letter-spacing:0.5px;">' + fmt(price) + '</div>'
+            + '</div>';
+        } else {
+          html += '<div class="vc-price">' + (available ? fmt(price) : '—') + '</div>';
+        }
+      }
+
+      if (isActive) {
+        html += '<button class="vc-btn btn-leave" onclick="leaveVilla()">ÇIKAR</button>';
+      } else if (isOwned) {
+        html += '<button class="vc-btn btn-enter" onclick="moveIn(\'' + c.id + '\')">GİR</button>';
+      } else if (available) {
+        html += '<button class="vc-btn btn-buy" onclick="openConfirm(\'' + c.id + '\',' + gi + ',' + ci + ')">SATIN AL</button>';
+      } else {
+        html += '<button class="vc-btn btn-locked" disabled>KİLİTLİ</button>';
+      }
+
+      html += '</div>';
+      html += '</div>'; // /villa-card
+    });
+
+    // Locked group placeholder
+    if (!unlocked) {
+      html += '<div style="background:#f9f9f9;border:1px dashed var(--grey-light);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">'
+        + '<span style="font-size:20px;opacity:.25;">🔒</span>'
+        + '<div>'
+        + '<div style="font-size:10px;color:#bbb;letter-spacing:1.5px;">' + g.name + '</div>'
+        + '<div style="font-size:8px;color:#ccc;letter-spacing:0.5px;margin-top:2px;">'
+        + prevGroupName(gi) + ' İLK VİLLASINI AL</div>'
+        + '</div></div>';
+    }
+
+    html += '</div>'; // /country-group
+  });
+
+  screen.innerHTML = html;
+}
+
+function openPop() {
+  document.getElementById('ov').style.display = 'block';
+  document.getElementById('pop').classList.add('open');
+  renderAll();
+}
+
+function closePop() {
+  document.getElementById('ov').style.display = 'none';
+  document.getElementById('pop').classList.remove('open');
+}
+
+function prevGroupName(gi) {
+  return gi > 0 ? VILLA_GROUPS[gi-1].name + ' \'DAN' : '';
+}
+
+function cityById(id) {
+  for (var i = 0; i < VILLA_GROUPS.length; i++) {
+    var found = VILLA_GROUPS[i].cities.find(function(c){ return c.id === id; });
+    if (found) return found;
+  }
+  return null;
+}
+
+// ────────────────────────────────────────────────────────
+// ACTIONS
+// ────────────────────────────────────────────────────────
+
+function moveIn(id) {
+  PLAYER_DATA.activeVilla = id;
+  var c = cityById(id);
+  showToast('✦ ' + (c ? c.name : id) + ' VİLLASINA GEÇTİN');
+  renderAll();
+}
+
+function leaveVilla() {
+  PLAYER_DATA.activeVilla = null;
+  showToast('VİLLADAN ÇIKTIN');
+  renderAll();
+}
+
+var _pendingGi = -1, _pendingCi = -1, _pendingId = '';
+
+function openConfirm(id, gi, ci) {
+  _pendingId = id;
+  _pendingGi = gi;
+  _pendingCi = ci;
+  var g = VILLA_GROUPS[gi];
+  var c = g.cities[ci];
+  var price = getFinalPrice(g, ci);
+  var basePrice = g.prices[ci] || g.prices[g.prices.length-1];
+  document.getElementById('c-title').textContent = c.name + ' VİLLA';
+  var discountNote = isFamilyCountry(g) ? ' · AİLE İNDİRİMİ -%70' : '';
+  document.getElementById('c-sub').textContent = c.flag + ' ' + c.country + ' · ' + g.name + ' — +0.3% defense bonus' + discountNote;
+  document.getElementById('c-price').textContent = fmt(price);
+  document.getElementById('c-balance').textContent = fmt(PLAYER.money);
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  _pendingId = ''; _pendingGi = -1; _pendingCi = -1;
+}
+
+function confirmBuy() {
+  if (!_pendingId) return;
+  var g = VILLA_GROUPS[_pendingGi];
+  var price = getFinalPrice(g, _pendingCi);
+  var c = g.cities[_pendingCi];
+
+  if (PLAYER.money < price) {
+    showToast('YETERSİZ PARA');
+    closeConfirm();
+    return;
+  }
+
+  PLAYER.money -= price;
+  PLAYER_DATA.villas[_pendingId] = true;
+
+  var was39 = ownedCount() - 1 === 39;
+  closeConfirm();
+  showToast(ownedCount() >= 40
+    ? '👑 40. VİLLA! MAX +%12 SAHİPLİK BONUSU!'
+    : '🏠 ' + c.name + ' VİLLASI SATIN ALINDI');
+  renderAll();
+}
+
+// ── INIT (popup açılınca çağrılır) ──
+</script>
+</body>
+</html>

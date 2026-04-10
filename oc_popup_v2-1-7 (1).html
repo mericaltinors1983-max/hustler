@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#888;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.open-btn{padding:12px 28px;background:#111;color:#fff;border:none;font-family:'Oswald',sans-serif;font-weight:700;font-size:16px;letter-spacing:2px;cursor:pointer;}
+#ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:10000;}
+#pop{display:none;position:fixed;bottom:116px;left:50%;transform:translateX(-50%);width:320px;height:520px;background:#fff;z-index:10001;flex-direction:column;overflow:hidden;border:3px double #111;border-bottom:none;}
+#pop.open{display:flex;animation:su .25s cubic-bezier(.4,0,.2,1);}
+@keyframes su{from{transform:translateX(-50%) translateY(640px);}to{transform:translateX(-50%) translateY(0);}}
+
+/* HEADER */
+#pop-head{height:44px;flex-shrink:0;background:#fff;border-bottom:3px double #111;display:flex;align-items:center;padding:0 12px;z-index:10;}
+.head-gif{width:32px;height:32px;object-fit:contain;flex-shrink:0;}
+.head-btns{display:flex;align-items:center;gap:0;margin-left:auto;}
+.head-btn{width:20px;height:20px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+.head-btn img{width:18px;height:18px;object-fit:contain;}
+
+/* SCREENS */
+#screens{flex:1;position:relative;overflow:hidden;}
+.sc{display:none;position:absolute;inset:0;background:#fff;flex-direction:column;align-items:center;justify-content:flex-start;padding:0;}
+.sc.on{display:flex;}
+
+/* ANA EKRAN */
+#sc-main{padding:16px 16px 0;}
+#sc-main .main-img{width:120px;height:120px;object-fit:contain;margin-bottom:8px;align-self:center;}
+#sc-main .main-title{font-family:'Oswald',sans-serif;font-weight:700;font-size:22px;color:#111;letter-spacing:2px;margin-bottom:2px;align-self:center;}
+#sc-main .main-desc{font-family:'Oswald',sans-serif;font-size:10px;color:#aaa;font-style:normal;margin-bottom:8px;align-self:center;}
+
+/* EKIP SLOTLARI */
+.crew-list{width:100%;display:flex;flex-direction:column;gap:0;}
+.crew-row{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;gap:8px;width:100%;}
+.crew-role{font-family:'Oswald',sans-serif;font-weight:700;font-size:10px;color:#aaa;letter-spacing:1px;width:80px;flex-shrink:0;}
+.crew-role.req{color:#c62828;}
+.crew-name{font-family:'Oswald',sans-serif;font-weight:700;font-size:13px;color:#111;letter-spacing:1px;flex:1;}
+.crew-name.empty{color:#ccc;}
+.crew-invite{padding:4px 10px;background:#111;border:none;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;cursor:pointer;flex-shrink:0;}
+.crew-invite.invited{background:#2e7d32;}
+.crew-invited-tag{font-family:'Oswald',sans-serif;font-size:9px;color:#2e7d32;flex-shrink:0;}
+
+/* SUCCESS RATE BAR */
+.rate-row{display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 0 4px;margin-top:4px;}
+.rate-lbl{font-family:'Oswald',sans-serif;font-weight:700;font-size:11px;color:#888;letter-spacing:1px;}
+.rate-val{font-family:'Oswald',sans-serif;font-weight:700;font-size:18px;color:#111;letter-spacing:1px;}
+.rate-track{width:100%;height:4px;background:#f0f0f0;border-radius:2px;margin-bottom:8px;}
+.rate-fill{height:4px;background:#111;border-radius:2px;transition:width .3s;}
+.tnt-warn{font-family:'Oswald',sans-serif;font-size:9px;color:#c62828;font-style:normal;width:100%;margin-bottom:8px;}
+
+/* START BTN */
+.start-btn{width:100%;padding:12px;background:#111;border:none;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;letter-spacing:2px;cursor:pointer;margin-top:8px;flex-shrink:0;}
+.start-btn:disabled{background:#ccc;cursor:not-allowed;}
+
+/* BEKLEME */
+#sc-wait{justify-content:center;padding:20px;text-align:center;}
+#sc-wait .wait-role{font-family:'Oswald',sans-serif;font-weight:700;font-size:13px;color:#888;letter-spacing:2px;margin-bottom:4px;}
+#sc-wait .wait-nick{font-family:'Oswald',sans-serif;font-weight:700;font-size:24px;color:#111;letter-spacing:2px;margin-bottom:12px;}
+.wait-dots{font-size:28px;animation:blink 1.2s infinite;}
+@keyframes blink{0%,100%{opacity:.2;}50%{opacity:1;}}
+#sc-wait .wait-sub{font-family:'Oswald',sans-serif;font-size:10px;color:#aaa;font-style:normal;margin-top:12px;}
+.cancel-btn{margin-top:20px;padding:10px 24px;background:#fff;border:2px solid #111;font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;cursor:pointer;}
+
+/* GIF */
+#sc-gif{padding:0;align-items:center;justify-content:center;}
+#sc-gif img{width:100%;height:100%;object-fit:cover;}
+
+/* BASARI */
+#sc-win{padding:20px;text-align:center;}
+#sc-win .win-top{width:100%;padding-bottom:10px;border-bottom:3px double #111;margin-bottom:10px;}
+#sc-win .win-eyebrow{font-family:'Oswald',sans-serif;font-size:9px;color:#888;letter-spacing:3px;text-transform:uppercase;}
+#sc-win .win-headline{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#111;margin-top:2px;}
+#sc-win .win-scene{font-family:'Oswald',sans-serif;font-size:10px;color:#555;font-style:normal;margin-top:2px;}
+#sc-win .win-imgs{display:flex;gap:16px;align-items:center;justify-content:center;margin-bottom:12px;}
+#sc-win .win-imgs img{width:72px;height:72px;object-fit:contain;}
+#sc-win .win-amount{font-family:'Oswald',sans-serif;font-weight:700;font-size:60px;font-weight:900;color:#111;letter-spacing:2px;line-height:1;}
+#sc-win .win-divider{width:100%;height:1px;background:#111;margin:10px 0;}
+#sc-win .win-flavor{font-family:'Oswald',sans-serif;font-style:normal;font-size:11px;color:#888;margin-bottom:8px;}
+#sc-win .win-btn{width:100%;padding:12px;background:#111;border:none;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:16px;letter-spacing:2px;cursor:pointer;}
+
+/* HAPİS */
+#sc-jail{padding:20px;text-align:center;}
+#sc-jail .jail-caught{font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;color:#1565c0;margin-bottom:8px;}
+#sc-jail .jail-title{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#c62828;margin-bottom:8px;}
+#sc-jail .jail-ico{font-size:52px;margin-bottom:10px;}
+#sc-jail .jail-timer{font-family:'Oswald',sans-serif;font-weight:700;font-size:52px;color:#111;letter-spacing:2px;margin-bottom:6px;}
+#sc-jail .jail-flavor{font-family:'Oswald',sans-serif;font-size:10px;color:#aaa;font-style:normal;margin-bottom:8px;}
+#sc-jail .jail-btn{width:100%;padding:12px;background:#c62828;border:none;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:16px;letter-spacing:2px;cursor:pointer;}
+
+/* BİLGİ */
+#sc-info{padding:0;align-items:flex-start;justify-content:flex-start;}
+#sc-info .info-head{width:100%;padding:12px 14px 10px;border-bottom:3px double #111;}
+#sc-info .info-title{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#111;}
+#sc-info .info-body{width:100%;flex:1;overflow-y:auto;padding:14px;}
+#sc-info .info-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0;}
+#sc-info .info-lbl{font-family:'Oswald',sans-serif;font-size:11px;color:#888;}
+#sc-info .info-val{font-family:'Oswald',sans-serif;font-weight:700;font-size:13px;color:#111;}
+#sc-info .info-back{width:100%;padding:12px;background:#111;border:none;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;letter-spacing:2px;cursor:pointer;}
+
+/* SİMÜLASYON PANELİ */
+#sim-panel{display:none;position:fixed;top:20px;right:20px;width:220px;background:#1a1a1a;border:2px solid #333;z-index:200;flex-direction:column;}
+#sim-panel.on{display:flex;}
+.sp-head{padding:8px 12px;border-bottom:1px solid #333;font-family:'Oswald',sans-serif;font-weight:700;font-size:11px;color:#C9A84C;letter-spacing:2px;}
+.sp-body{padding:12px;}
+.sp-msg{font-family:'Oswald',sans-serif;font-size:11px;color:#ccc;margin-bottom:8px;line-height:1.5;}
+.sp-role{color:#C9A84C;font-weight:bold;}
+.sp-btns{display:flex;gap:8px;}
+.sp-ok{flex:1;padding:8px;background:#2e7d32;border:none;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;cursor:pointer;}
+.sp-no{flex:1;padding:8px;background:#c62828;border:none;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;cursor:pointer;}
+
+/* TOAST */
+#toast{position:absolute;bottom:116px;left:50%;transform:translateX(-50%);background:#111;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;padding:7px 14px;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none;z-index:200;}
+#toast.green{background:#2e7d32;}
+#toast.red{background:#c62828;}
+#toast.show{opacity:1;}
+
+/* === KALIP: konum, boyut, font, renk === */
+#pop{bottom:116px!important;width:320px!important;height:520px!important;border:3px double #111!important;border-bottom:none!important;}
+#hd,#pop-head,.pop-header{height:64px!important;border-bottom:3px double #111!important;background:#fff!important;color:#111!important;}
+.tab{font-family:'Oswald',sans-serif!important;font-weight:600!important;font-size:11px!important;letter-spacing:1.5px!important;color:#aaa!important;}
+.tab.active{color:#111!important;border-bottom:2px solid #111!important;}
+.sc-lbl,.section-lbl,.eyebrow,.bal-lbl,.sknm,.sub-lbl,.info-lbl{font-family:'Oswald',sans-serif!important;font-weight:600!important;font-size:10px!important;color:#888!important;letter-spacing:1px!important;font-style:normal!important;}
+.row-lbl,.lbl,.label{font-family:'Oswald',sans-serif!important;font-weight:600!important;font-size:11px!important;color:#111!important;font-style:normal!important;}
+.row-val,.val,.value{font-family:'Oswald',sans-serif;font-weight:700!important;font-size:13px!important;color:#111!important;}
+.row-val.green,.green-val{color:#2e7d32!important;}
+.row-val.gold,.gold-val{color:#B8860B!important;}
+.row-val.grey,.grey-val{color:#aaa!important;}
+.row-val.red,.red-val,.danger-txt{color:#8B3030!important;}
+.btn,.btn-full{font-family:'Oswald',sans-serif;font-weight:700!important;font-size:13.5px!important;letter-spacing:2px!important;}
+</style>
+</head>
+<body>
+
+<button class="open-btn" onclick="openPop()">OC POPUP AC</button>
+<div id="ov" onclick="closePop()"></div>
+
+<div id="pop">
+  
+<div id="hd" style="height:64px;flex-shrink:0;background:#fff;border-bottom:3px double #111;display:flex;align-items:center;padding:0 10px;position:relative;">
+
+  <!-- Sol: oc gif -->
+  <img src="https://mericaltinors1983-max.github.io/hustler/oc_start.gif"
+       style="width:35px;height:35px;object-fit:contain;flex-shrink:0;"
+       onerror="this.style.display='none'">
+
+  <!-- Orta: lafamilia logo -->
+  <div style="position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+    <img src="https://mericaltinors1983-max.github.io/hustler/lafamilia-2.png"
+         style="height:54px;max-width:220px;object-fit:contain;"
+         onerror="this.style.display='none'" ">
+  </div>
+
+  <!-- Sağ: info + kapat (sabit PNG) -->
+  <div style="margin-left:auto;display:flex;align-items:center;gap:2px;">
+    <button style="background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;" onclick="openInfo()" id="hd-info-btn">
+      <img src="https://mericaltinors1983-max.github.io/hustler/info2.png"
+           style="width:22px;height:22px;object-fit:contain;"
+           onerror="this.style.display='none'" ">
+    </button>
+    <button style="background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center;" onclick="closePop()">
+      <img src="https://mericaltinors1983-max.github.io/hustler/close1.png"
+           style="width:22px;height:22px;object-fit:contain;"
+           onerror="this.style.display='none'" ">
+    </button>
+  </div>
+</div>
+
+  <div id="screens">
+
+    <!-- ANA -->
+    <div class="sc on" id="sc-main" style="padding:0;justify-content:flex-start;">
+
+      <!-- Scrollable üst alan -->
+      <div style="flex:1;overflow-y:auto;width:100%;padding:12px 16px 0;">
+        <img src="https://mericaltinors1983-max.github.io/hustler/popup_oc.png"
+             style="width:90px;height:90px;object-fit:contain;display:block;margin:0 auto 6px;"
+             onerror="this.style.display='none'">
+        <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:20px;color:#111;letter-spacing:2px;text-align:center;margin-bottom:2px;">ORGANIZE CRIME</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:10px;color:#aaa;font-style:normal;text-align:center;margin-bottom:8px;">"The biggest score. The highest risk."</div>
+
+        <div class="crew-list" style="width:100%;">
+          <!-- LİDER -->
+          <div class="crew-row">
+            <div class="crew-role req">LİDER</div>
+            <div class="crew-name">SEN (ENFORCER R7)</div>
+          </div>
+          <!-- ŞOFÖR -->
+          <div class="crew-row" id="row-driver">
+            <div class="crew-role req">ŞOFÖR *</div>
+            <div class="crew-name empty" id="name-driver">— BOŞ —</div>
+            <button class="crew-invite" onclick="sendInvite('driver','ŞOFÖR')">DAVET</button>
+          </div>
+          <!-- NİŞANCI 1 -->
+          <div class="crew-row" id="row-sniper1">
+            <div class="crew-role req">NİŞANCI *</div>
+            <div class="crew-name empty" id="name-sniper1">— BOŞ —</div>
+            <button class="crew-invite" onclick="sendInvite('sniper1','NİŞANCI')">DAVET</button>
+          </div>
+          <!-- NİŞANCI 2 -->
+          <div class="crew-row" id="row-sniper2">
+            <div class="crew-role" style="color:#888;">NİŞANCI 2</div>
+            <div class="crew-name empty" id="name-sniper2">— OPSİYONEL —</div>
+            <button class="crew-invite" onclick="sendInvite('sniper2','NİŞANCI 2')">DAVET</button>
+          </div>
+          <!-- BOMBA -->
+          <div class="crew-row" id="row-bomb">
+            <div class="crew-role" style="color:#888;">BOMBA UZM.</div>
+            <div class="crew-name empty" id="name-bomb">— OPSİYONEL —</div>
+            <button class="crew-invite" onclick="sendInvite('bomb','BOMBA UZM.')">DAVET</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sabit start butonu -->
+      <div style="flex-shrink:0;width:100%;border-top:1px solid #f0f0f0;padding:10px 16px;">
+        <button id="start-btn" onclick="startOC()"
+          style="width:100%;padding:13px;background:#111;border:none;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:16px;letter-spacing:3px;cursor:pointer;opacity:.4;pointer-events:none;">
+          OC BAŞLAT
+        </button>
+      </div>
+    </div>
+
+    <!-- BEKLEME -->
+    <div class="sc" id="sc-wait">
+      <div class="wait-role" id="wait-role">ŞOFÖR</div>
+      <div class="wait-nick" id="wait-nick">WHEELS_22</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;color:#aaa;font-style:normal;margin-bottom:8px;">daveti bekleniyor...</div>
+      <div class="wait-dots">···</div>
+      <div class="wait-sub" id="wait-sub">"Ekip hazırlanıyor..."</div>
+      <button class="cancel-btn" onclick="cancelInvite()">İPTAL</button>
+    </div>
+
+    <!-- GIF -->
+    <div class="sc" id="sc-gif">
+      <img id="oc-gif-img" src="https://mericaltinors1983-max.github.io/hustler/oc_start.gif"
+        style="width:50%;height:50%;object-fit:contain;"
+        onerror="this.style.display='none'">
+    </div>
+
+    <!-- BAŞARI -->
+    <div class="sc" id="sc-win">
+      <div class="win-top">
+        <div class="win-eyebrow">İSTANBUL · ENFORCER</div>
+        <div class="win-headline">Operasyon Başarılı</div>
+        <div class="win-scene" id="win-scene">The Heist of the Century</div>
+      </div>
+      <div class="win-imgs">
+        <img src="https://mericaltinors1983-max.github.io/hustler/broken.png"
+          onerror="this.style.display='none'">
+        <img src="https://mericaltinors1983-max.github.io/hustler/money-1.png"
+          onerror="this.style.display='none'">
+      </div>
+      <div class="win-amount" id="win-amount">+$240.000</div>
+      <div class="win-divider"></div>
+      <div class="win-flavor" id="win-flavor">"The crew moved like ghosts."</div>
+      <button class="win-btn" onclick="closePop()">TAMAM</button>
+    </div>
+
+    <!-- HAPİS -->
+    <div class="sc" id="sc-jail">
+      <div class="jail-caught">TÜM EKIP YAKALANDI</div>
+      <div class="jail-title">Hapishane</div>
+      <div class="jail-ico">🚔</div>
+      <div class="jail-timer" id="jail-timer">4:00</div>
+      <div class="jail-flavor" id="jail-flavor">"The feds were waiting."</div>
+      <button class="jail-btn" onclick="closePop()">TAMAM</button>
+    </div>
+
+    <!-- BİLGİ -->
+    <div class="sc" id="sc-info">
+      <div class="info-head"><div class="info-title">Organize Crime — Bilgi</div></div>
+      <div class="info-body">
+        <div class="info-row"><span class="info-lbl">Min. Rank</span><span class="info-val">Rank 8 (Operator)</span></div>
+        <div class="info-row"><span class="info-lbl">Cooldown</span><span class="info-val">12 Saat</span></div>
+        <div class="info-row"><span class="info-lbl">Ekip</span><span class="info-val">3—5 Kişi</span></div>
+        <div class="info-row"><span class="info-lbl">Kazanç</span><span class="info-val" id="info-kazanc">—</span></div>
+        <div class="info-row"><span class="info-lbl">Başarı Oranı</span><span class="info-val" id="info-basari">—</span></div>
+        <div class="info-row"><span class="info-lbl">XP (Tüm ekip)</span><span class="info-val">+1.800</span></div>
+        <div class="info-row"><span class="info-lbl">KS (Tüm ekip)</span><span class="info-val">+30</span></div>
+        <div class="info-row"><span class="info-lbl">Para</span><span class="info-val">Sadece Lidere</span></div>
+        <div class="info-row"><span class="info-lbl">Hapis Süresi</span><span class="info-val">R8:4dk · R9:5dk · R10:6dk · R11:8dk · R12:10dk · R13:15dk · R14:20dk</span></div>
+        <div class="info-row"><span class="info-lbl">TNT Bonusu</span><span class="info-val">T1:+%5 · T2:+%8 · T3:+%12 · T4:+%16 · T5:+%20</span></div>
+        <div class="info-row"><span class="info-lbl">TNT Yok Cezası</span><span class="info-val">-%12</span></div>
+        <div class="info-row"><span class="info-lbl">2. Nişancı</span><span class="info-val">+%5 başarı</span></div>
+      </div>
+      <button class="info-back" onclick="goSc('sc-main')">← GERİ</button>
+    </div>
+
+  </div>
+
+
+<div id="pop-close-bar" style="flex-shrink:0;border-top:3px double #111;">
+  <button onclick="closePop()" style="width:100%;padding:8px;background:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+    <img src="https://mericaltinors1983-max.github.io/hustler/close_icon.png"
+         style="width:50px;height:50px;object-fit:contain;"
+         onerror="this.style.display='none'" ">
+  </button>
+</div>
+
+  <div id="toast"></div>
+</div>
+
+<!-- SİMÜLASYON PANELİ -->
+<div id="sim-panel">
+  <div class="sp-head">📱 SİMÜLASYON PANELİ</div>
+  <div class="sp-body">
+    <div class="sp-msg"><span class="sp-role" id="sim-role">MERIC_47</span> seni OC'ye davet etti.<br>Rolun: <span id="sim-rolename">ŞOFÖR</span><br>Kabul ediyor musun?</div>
+    <div class="sp-btns">
+      <button class="sp-ok" onclick="simAccept()">ONAYLA</button>
+      <button class="sp-no" onclick="simReject()">REDDET</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var BASE = "https://mericaltinors1983-max.github.io/hustler/";
+var CREW = {driver:null, sniper1:null, sniper2:null, bomb:null, bomb_tier:0};
+var pendingRole = null, pendingNick = null;
+var CD = 0, CD_INT = null, JAIL_INT = null;
+
+// PLAYER — gerçekte base_prototype'tan inject edilir
+var PLAYER = window.PLAYER || { city: 'İstanbul', rankName: 'Operator' };
+
+// GC_3 canonical — rank ismi → rank ID
+var RANK_ID = {
+  'Street Rat':1,'Runner':2,'Hustler':3,'Crook':4,'Thug':5,
+  'Gangster':6,'Enforcer':7,'Operator':8,'Hitman':9,'Underboss':10,
+  'Strategist':11,'Boss':12,'Crew Chief':13,'Godfather':14
+};
+function getPlayerRankId() { return RANK_ID[PLAYER.rankName] || 8; }
+
+// GC_3 canonical — OC başarı oranları
+var OC_BASARI = {8:.50,9:.55,10:.60,11:.65,12:.70,13:.75,14:.80};
+
+// GC_3 canonical — OC para aralıkları [min, max]
+var OC_PARA = {
+  8:[30000,120000],  9:[60000,240000],  10:[120000,420000],
+  11:[210000,600000],12:[330000,900000],13:[480000,1320000],14:[720000,2100000]
+};
+
+// GC_3 canonical — TNT tier bonusu (%)
+var TNT_BONUS = [0,5,8,12,16,20]; // index = tier
+
+// GC_3 canonical — hapis süresi (saniye)
+var OC_JAIL = {8:240,9:300,10:360,11:480,12:600,13:900,14:1200};
+
+var NPC_NAMES = ["WHEELS_22","DEAD_EYE","GHOST_47","TNT_MIKE","HAWK_55"];
+var OC_WIN_FL = ['"The crew moved like ghosts. Clean operation."','"Textbook OC. Everyone played their part."','"Big money. Professional work."'];
+var OC_FAIL_FL = ['"The feds were tipped off."','"Someone talked. Job burned."','"SWAT was waiting."'];
+var OC_SCENES = ["The Heist of the Century","Operation Blackout"];
+
+function openInfo() {
+  var rankId = getPlayerRankId();
+  var paraRange = OC_PARA[rankId] || [30000,120000];
+  var basePct = Math.round((OC_BASARI[rankId] || 0.50) * 100);
+  var rankName = PLAYER.rankName || 'Operator';
+  document.getElementById('info-kazanc').textContent =
+    '$'+paraRange[0].toLocaleString()+' — $'+paraRange[1].toLocaleString()+' ('+rankName+')';
+  document.getElementById('info-basari').textContent = '%'+basePct+' baz ('+rankName+')';
+  goSc('sc-info');
+}
+
+function goSc(id) {
+  var all = document.querySelectorAll(".sc");
+  for (var i = 0; i < all.length; i++) all[i].classList.remove("on");
+  document.getElementById(id).classList.add("on");
+}
+
+function toast(m, t, d) {
+  var el = document.getElementById("toast");
+  el.textContent = m;
+  el.className = (t || "") + " show";
+  clearTimeout(el._r);
+  el._r = setTimeout(function() { el.className = t || ""; }, d || 2000);
+}
+
+function calcRate() {
+  var rankId = getPlayerRankId();
+  // GC_3: baz oran rank'tan
+  var rate = (OC_BASARI[rankId] || 0.50) * 100;
+  // GC_3: 2. Nişancı varsa +%5
+  if (CREW.sniper2) rate += 5;
+  // GC_3: TNT varsa tier bonusu, yoksa -%12 ceza
+  if (CREW.bomb) {
+    rate += (TNT_BONUS[CREW.bomb_tier] || TNT_BONUS[1]);
+  } else {
+    rate -= 12;
+  }
+  return Math.max(10, Math.min(100, rate));
+}
+
+function updateRate() {
+  var canStart = CREW.driver && CREW.sniper1;
+  var sb = document.getElementById("start-btn");
+  if(sb){
+    sb.style.opacity = canStart ? "1" : "0.4";
+    sb.style.pointerEvents = canStart ? "auto" : "none";
+    sb.style.background = canStart ? "#111" : "#111";
+  }
+}
+
+function sendInvite(role, roleName) {
+  var nick = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
+  pendingRole = role;
+  pendingNick = nick;
+  document.getElementById("wait-role").textContent = roleName;
+  document.getElementById("wait-nick").textContent = nick;
+  goSc("sc-wait");
+  // DEMO: 1.5 saniyede otomatik kabul
+  setTimeout(function() {
+    simAccept();
+    toast("✅ " + nick + " kabul etti! (DEMO)");
+  }, 1500);
+}
+
+function cancelInvite() {
+  pendingRole = null;
+  pendingNick = null;
+  document.getElementById("sim-panel").classList.remove("on");
+  goSc("sc-main");
+}
+
+function simAccept() {
+  document.getElementById("sim-panel").classList.remove("on");
+  if (!pendingRole) return;
+  CREW[pendingRole] = pendingNick;
+  var nameEl = document.getElementById("name-" + pendingRole);
+  var btnEl = document.querySelector("#row-" + pendingRole + " .crew-invite");
+  if (nameEl) { nameEl.textContent = pendingNick; nameEl.className = "crew-name"; }
+  if (btnEl) { btnEl.textContent = "HAZIR"; btnEl.style.background = "#2e7d32"; btnEl.disabled = true; }
+  toast(pendingNick + " katıldı!", "green", 1500);
+  pendingRole = null;
+  pendingNick = null;
+  updateRate();
+  goSc("sc-main");
+}
+
+function simReject() {
+  document.getElementById("sim-panel").classList.remove("on");
+  toast(pendingNick + " reddetti", "red", 2000);
+  pendingRole = null;
+  pendingNick = null;
+  goSc("sc-main");
+}
+
+function startOC() {
+  if (!CREW.driver || !CREW.sniper1) return;
+  goSc("sc-gif");
+  setTimeout(function() { runOC(); }, 2500);
+}
+
+function runOC() {
+  var rate = calcRate();
+  var win = Math.random() * 100 < rate;
+  var rankId = getPlayerRankId();
+  if (win) {
+    // GC_3: para rank-based aralık
+    var paraRange = OC_PARA[rankId] || [30000,120000];
+    var amount = Math.floor(Math.random() * (paraRange[1] - paraRange[0]) + paraRange[0]);
+    var rounded = Math.round(amount / 1000) * 1000;
+    document.getElementById("win-amount").textContent = "+$" + rounded.toLocaleString();
+    document.getElementById("win-flavor").textContent = OC_WIN_FL[Math.floor(Math.random() * OC_WIN_FL.length)];
+    document.getElementById("win-scene").textContent = OC_SCENES[Math.floor(Math.random() * OC_SCENES.length)];
+    goSc("sc-win");
+  } else {
+    document.getElementById("jail-flavor").textContent = OC_FAIL_FL[Math.floor(Math.random() * OC_FAIL_FL.length)];
+    // GC_3: hapis süresi rank-based
+    startJail(OC_JAIL[rankId] || 240);
+  }
+  startCD(12 * 3600);
+}
+
+function startJail(sec) {
+  var s = sec;
+  document.getElementById("jail-timer").textContent = fmt(s);
+  goSc("sc-jail");
+  clearInterval(JAIL_INT);
+  JAIL_INT = setInterval(function() {
+    s--;
+    document.getElementById("jail-timer").textContent = fmt(s);
+    if (s <= 0) clearInterval(JAIL_INT);
+  }, 1000);
+}
+
+function startCD(sec) {
+  CD = sec;
+  clearInterval(CD_INT);
+  CD_INT = setInterval(function() {
+    CD--;
+    if (CD <= 0) { clearInterval(CD_INT); CD = 0; }
+  }, 1000);
+}
+
+function fmt(s) {
+  var m = Math.floor(s / 60), x = s % 60;
+  return m + ":" + (x < 10 ? "0" : "") + x;
+}
+
+function openPop() {
+  if (CD > 0) { toast("COOLDOWN: " + fmt(CD), "red", 2000); return; }
+  // Reset
+  CREW = {driver:null, sniper1:null, sniper2:null, bomb:null, bomb_tier:0};
+  var roles = ["driver","sniper1","sniper2","bomb"];
+  var emptyTxts = ["— BOŞ —","— BOŞ —","— OPSİYONEL —","— OPSİYONEL —"];
+  for (var i = 0; i < roles.length; i++) {
+    var nameEl = document.getElementById("name-" + roles[i]);
+    var row = document.getElementById("row-" + roles[i]);
+    if (nameEl) { nameEl.textContent = emptyTxts[i]; nameEl.className = "crew-name empty"; }
+    if (row) {
+      var btn = row.querySelector(".crew-invite");
+      if (btn) { btn.textContent = "DAVET"; btn.style.background = "#111"; btn.disabled = false; }
+    }
+  }
+  updateRate();
+  document.getElementById("ov").style.display = "block";
+  document.getElementById("pop").classList.add("open");
+  goSc("sc-main");
+}
+
+function closePop() {
+  document.getElementById("ov").style.display = "none";
+  document.getElementById("pop").classList.remove("open");
+  document.getElementById("sim-panel").classList.remove("on");
+  clearInterval(JAIL_INT);
+}
+</script>
+</body>
+</html>
